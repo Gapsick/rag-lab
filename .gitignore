@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+
+# 환경변수
+.env
+.env.*
+
+# 업로드/임시 파일
+uploads/
+tmp/
+*.pdf
+
+# Docker
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docling 모델 캐시
+~/.cache/docling/

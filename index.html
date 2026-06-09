@@ -1,0 +1,1661 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>강의자료 Q&A</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f5f5;
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* ── 사이드바 ── */
+    #sidebar {
+      width: 272px;
+      flex-shrink: 0;
+      background: #fafafa;
+      border-right: 1px solid #e5e7eb;
+      padding: 18px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      overflow-y: auto;
+    }
+    #sidebar h2 { font-size: 15px; font-weight: 700; color: #111; letter-spacing: -0.3px; }
+
+    .section-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 6px;
+    }
+
+    .file-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 12px;
+      border: 2px dashed #d1d5db;
+      border-radius: 10px;
+      cursor: pointer;
+      color: #9ca3af;
+      font-size: 13px;
+      transition: all 0.18s;
+      background: white;
+    }
+    .file-label:hover { border-color: #6366f1; color: #6366f1; background: #f5f3ff; }
+    #fileInput { display: none; }
+    #fileNames { font-size: 12px; color: #6366f1; font-weight: 500; margin-top: 5px; line-height: 1.5; }
+
+    /* ── 로더 선택기 ── */
+    .loader-selector {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .loader-option {
+      border: 1.5px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 10px 10px 8px;
+      cursor: pointer;
+      background: white;
+      transition: all 0.15s;
+      position: relative;
+    }
+    .loader-option:hover { border-color: #a5b4fc; background: #fafbff; }
+    .loader-option.active { border-color: #6366f1; background: #eef2ff; }
+    .loader-option input { display: none; }
+    .loader-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: #374151;
+      margin-bottom: 3px;
+    }
+    .loader-option.active .loader-name { color: #4f46e5; }
+    .loader-desc {
+      font-size: 10px;
+      color: #9ca3af;
+      line-height: 1.4;
+    }
+    .loader-option.active .loader-desc { color: #818cf8; }
+    .loader-badge {
+      position: absolute;
+      top: 6px; right: 6px;
+      font-size: 9px;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .badge-learn { background: #fef3c7; color: #92400e; }
+    .badge-oss   { background: #dcfce7; color: #166534; }
+
+    /* ── 이미지 분석 토글 ── */
+    .vision-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: white;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .vision-toggle:hover { border-color: #a5b4fc; }
+    .vision-toggle.checked { border-color: #6366f1; background: #eef2ff; }
+    .vision-toggle input { display: none; }
+    .toggle-switch {
+      width: 32px; height: 18px;
+      background: #d1d5db;
+      border-radius: 9px;
+      flex-shrink: 0;
+      position: relative;
+      transition: background 0.2s;
+    }
+    .vision-toggle.checked .toggle-switch { background: #6366f1; }
+    .toggle-knob {
+      position: absolute;
+      top: 2px; left: 2px;
+      width: 14px; height: 14px;
+      background: white;
+      border-radius: 50%;
+      transition: left 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    }
+    .vision-toggle.checked .toggle-knob { left: 16px; }
+    .vision-text { flex: 1; }
+    .vision-text strong { display: block; font-size: 12px; color: #374151; font-weight: 600; }
+    .vision-toggle.checked .vision-text strong { color: #4f46e5; }
+    .vision-text span { font-size: 11px; color: #9ca3af; }
+
+    .btn {
+      width: 100%;
+      padding: 9px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .btn-primary { background: #6366f1; color: white; }
+    .btn-primary:hover { background: #4f46e5; }
+    .btn-secondary { background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; }
+    .btn-secondary:hover { background: #e5e7eb; }
+    .btn:disabled { background: #d1d5db; color: #9ca3af; cursor: not-allowed; }
+
+    #sideStatus { font-size: 12px; color: #555; line-height: 1.6; white-space: pre-line; }
+    #chunkBadge {
+      font-size: 12px;
+      background: #f0f0f0;
+      border-radius: 6px;
+      padding: 8px 10px;
+      color: #444;
+    }
+    .divider { border: none; border-top: 1px solid #e5e7eb; }
+
+    /* ── 채팅 ── */
+    #chat {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    #chatHeader {
+      padding: 14px 20px;
+      background: white;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #chatHeader span { font-size: 15px; font-weight: 600; color: #111; }
+    #devToggle {
+      padding: 6px 12px;
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      color: #374151;
+    }
+    #devToggle:hover { background: #e5e7eb; }
+    #devToggle.active { background: #eef2ff; border-color: #c7d2fe; color: #4f46e5; }
+
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .msg {
+      max-width: 88%;
+      padding: 11px 15px;
+      border-radius: 16px;
+      font-size: 14px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .msg.user {
+      align-self: flex-end;
+      background: #6366f1;
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+    .msg.assistant {
+      align-self: flex-start;
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-bottom-left-radius: 4px;
+      color: #111;
+      white-space: normal;
+    }
+    /* ── RAG 흐름 패널 (3 섹션) ── */
+    .trace-panels {
+      margin-top: 10px;
+      border-top: 1px solid #eee;
+      padding-top: 8px;
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .trace-panel {
+      border: 1px solid #e8e8f0;
+      border-radius: 8px;
+      overflow: hidden;
+      font-size: 12px;
+      flex: 1;
+      min-width: 160px;
+    }
+    .trace-panel-header {
+      padding: 7px 12px;
+      background: #f5f5fc;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 600;
+      font-size: 12px;
+      color: #444;
+    }
+    .trace-panel-header:hover { background: #ededf8; }
+    .trace-chevron { font-size: 10px; color: #aaa; transition: transform 0.2s; }
+    .trace-panel.open .trace-chevron { transform: rotate(90deg); }
+    .trace-panel-body {
+      display: none;
+      padding: 10px 12px;
+      background: white;
+      border-top: 1px solid #e8e8f0;
+      line-height: 1.6;
+    }
+    .trace-panel.open .trace-panel-body { display: block; }
+
+    /* 재작성 패널 */
+    .rw-label { font-size: 10px; color: #aaa; margin-bottom: 2px; }
+    .rw-original { color: #555; margin-bottom: 8px; }
+    .rw-result { color: #6366f1; font-weight: 500; margin-bottom: 6px; }
+    .rw-reason { font-size: 11px; color: #888; background: #f5f5ff; padding: 4px 8px; border-radius: 4px; }
+
+    /* 검색 패널 */
+    .search-intent { margin-bottom: 8px; font-size: 12px; }
+    .chunk-row-trace {
+      padding: 5px 8px;
+      border-radius: 5px;
+      margin-top: 4px;
+      font-size: 11px;
+      line-height: 1.5;
+      background: #f8f9ff;
+      border-left: 3px solid #c7d2fe;
+    }
+    .sim-score { font-weight: 700; color: #4f46e5; margin-right: 6px; }
+    .chunk-src  { color: #555; margin-right: 6px; }
+    .chunk-prev { color: #999; }
+
+    /* Re-ranking 패널 */
+    .rerank-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 5px;
+      margin-top: 4px;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+    .rerank-row.used   { background: #f0fdf4; border-left: 3px solid #4ade80; }
+    .rerank-row.unused { background: #fafafa; border-left: 3px solid #e5e7eb; color: #aaa; }
+    .rank-change { font-size: 11px; font-weight: 700; width: 32px; flex-shrink: 0; text-align: center; }
+    .rank-up   { color: #16a34a; }
+    .rank-down { color: #dc2626; }
+    .rank-same { color: #999; }
+    .rerank-scores { flex-shrink: 0; }
+    .rerank-score  { font-weight: 700; color: #f59e0b; }
+    .rerank-info   { flex: 1; min-width: 0; }
+    .rerank-src    { font-weight: 500; color: #555; margin-bottom: 2px; }
+    .rerank-reason { color: #888; font-size: 10px; }
+    .rerank-row.unused .rerank-src    { color: #bbb; }
+    .rerank-row.unused .rerank-reason { color: #ccc; }
+
+    /* 평가 버튼 & 결과 */
+    .eval-btn {
+      margin-top: 10px;
+      padding: 5px 12px;
+      font-size: 12px;
+      background: #f5f5ff;
+      border: 1px solid #c7d2fe;
+      border-radius: 6px;
+      color: #4f46e5;
+      cursor: pointer;
+    }
+    .eval-btn:hover { background: #eef2ff; }
+    .eval-btn:disabled { color: #aaa; border-color: #e5e7eb; background: #fafafa; cursor: not-allowed; }
+    .eval-result {
+      margin-top: 8px;
+      border: 1px solid #e8e8f0;
+      border-radius: 8px;
+      overflow: hidden;
+      font-size: 12px;
+    }
+    .eval-result-header {
+      padding: 7px 12px;
+      background: #f5f5fc;
+      font-weight: 600;
+      font-size: 12px;
+      color: #444;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .eval-avg { font-size: 11px; color: #6366f1; font-weight: 700; }
+    .eval-rows { padding: 8px 12px; background: white; }
+    .eval-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 5px 0;
+      border-bottom: 1px solid #f0f0f8;
+    }
+    .eval-row:last-child { border-bottom: none; }
+    .eval-metric { width: 110px; flex-shrink: 0; color: #555; }
+    .eval-bar-wrap { flex: 1; background: #f0f0f8; border-radius: 4px; height: 8px; overflow: hidden; }
+    .eval-bar { height: 100%; border-radius: 4px; transition: width 0.6s; }
+    .eval-score-num { width: 28px; text-align: right; font-weight: 700; flex-shrink: 0; }
+    .eval-reason { font-size: 11px; color: #888; flex: 2; }
+
+    .sources {
+      margin-top: 8px;
+      font-size: 11px;
+      color: #999;
+      border-top: 1px solid #eee;
+      padding-top: 6px;
+    }
+
+    #inputArea {
+      padding: 12px 20px;
+      background: white;
+      border-top: 1px solid #e0e0e0;
+      display: flex;
+      gap: 8px;
+    }
+    #queryInput {
+      flex: 1;
+      padding: 9px 13px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+    }
+    #queryInput:focus { border-color: #6366f1; }
+    #sendBtn {
+      padding: 9px 18px;
+      background: #6366f1;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    #sendBtn:hover { background: #4f46e5; }
+    #sendBtn:disabled { background: #c4c4c4; cursor: not-allowed; }
+
+    /* ── 개발자 패널 ── */
+    #devPanel {
+      width: 540px;
+      flex-shrink: 0;
+      background: #1e1e2e;
+      border-left: 1px solid #313244;
+      display: none;
+      flex-direction: column;
+      color: #cdd6f4;
+    }
+    #devPanel.visible { display: flex; }
+
+    #devHeader {
+      padding: 16px 20px;
+      background: #181825;
+      border-bottom: 1px solid #313244;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    #devHeader .title { font-size: 15px; font-weight: 600; color: #cba6f7; flex: 1; }
+    #devChunkCount {
+      font-size: 13px;
+      background: #313244;
+      padding: 3px 10px;
+      border-radius: 10px;
+      color: #a6e3a1;
+    }
+    #closeDevBtn {
+      background: none;
+      border: none;
+      color: #6c7086;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 0 4px;
+    }
+    #closeDevBtn:hover { color: #f38ba8; }
+
+    #devToolbar {
+      padding: 12px 20px;
+      background: #181825;
+      border-bottom: 1px solid #313244;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    #devToolbar label { font-size: 13px; color: #a6adc8; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+    #devToolbar input[type=checkbox] { width: 14px; height: 14px; cursor: pointer; }
+
+    /* 위: 청크 목록 */
+    #chunkList {
+      flex: 0 0 40%;
+      overflow-y: auto;
+      border-bottom: 2px solid #313244;
+    }
+    #chunkList::-webkit-scrollbar { width: 6px; }
+    #chunkList::-webkit-scrollbar-track { background: #1e1e2e; }
+    #chunkList::-webkit-scrollbar-thumb { background: #45475a; border-radius: 3px; }
+
+    .chunk-row {
+      padding: 11px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      border-bottom: 1px solid #1a1a2e;
+    }
+    .chunk-row:hover { background: #252535; }
+    .chunk-row.selected { background: #2a2a4a; border-left: 3px solid #cba6f7; }
+    .chunk-num {
+      font-size: 11px;
+      color: #45475a;
+      width: 22px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .chunk-source {
+      font-size: 13px;
+      color: #89b4fa;
+      flex: 1;
+    }
+    .chunk-meta {
+      font-size: 12px;
+      color: #45475a;
+      flex-shrink: 0;
+    }
+    .chunk-del {
+      background: none;
+      border: none;
+      color: #45475a;
+      cursor: pointer;
+      font-size: 15px;
+      padding: 0 2px;
+      flex-shrink: 0;
+    }
+    .chunk-del:hover { color: #f38ba8; }
+
+    /* 아래: 선택된 청크 내용 */
+    #chunkDetail {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    #detailHeader {
+      padding: 10px 16px;
+      background: #11111b;
+      border-bottom: 1px solid #313244;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    #detailSource {
+      font-size: 13px;
+      color: #cba6f7;
+      font-weight: 500;
+    }
+    #detailMeta {
+      font-size: 12px;
+      color: #45475a;
+    }
+    #detailTextarea {
+      flex: 1;
+      width: 100%;
+      padding: 16px;
+      background: #13131e;
+      color: #cdd6f4;
+      border: none;
+      font-size: 14px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      line-height: 1.8;
+      resize: none;
+      outline: none;
+    }
+    #detailTextarea:focus { background: #181825; }
+
+    #devFooter {
+      padding: 12px 16px;
+      background: #181825;
+      border-top: 1px solid #313244;
+      display: flex;
+      gap: 8px;
+    }
+    #confirmBtn {
+      flex: 1;
+      padding: 10px;
+      background: #a6e3a1;
+      color: #1e1e2e;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    #confirmBtn:hover { background: #94e2d5; }
+    #confirmBtn:disabled { background: #45475a; color: #6c7086; cursor: not-allowed; }
+    #devStatus {
+      font-size: 12px;
+      color: #a6adc8;
+      text-align: center;
+      padding: 4px 0;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: #45475a;
+      font-size: 13px;
+      padding: 40px 20px;
+      line-height: 2;
+    }
+
+    /* ── 마크다운 렌더링 ── */
+    .msg.assistant p { margin: 0 0 6px; }
+    .msg.assistant p:last-child { margin-bottom: 0; }
+    .msg.assistant h1, .msg.assistant h2, .msg.assistant h3 {
+      font-size: 14px; font-weight: 700; margin: 10px 0 3px;
+    }
+    .msg.assistant h1:first-child,
+    .msg.assistant h2:first-child,
+    .msg.assistant h3:first-child { margin-top: 0; }
+    .msg.assistant ul, .msg.assistant ol { padding-left: 18px; margin: 2px 0 6px; }
+    .msg.assistant li { margin-bottom: 2px; }
+    .msg.assistant hr { border: none; border-top: 1px solid #dde; margin: 8px 0; }
+    .msg.assistant strong { font-weight: 700; }
+    .msg.assistant code {
+      background: #f0f0f8; padding: 1px 4px;
+      border-radius: 3px; font-size: 12px; font-family: monospace;
+    }
+    /* ── 트레이스 패널 컴팩트 ── */
+    .trace-panels { margin-top: 8px; padding-top: 6px; gap: 4px; }
+    .trace-panel-header { padding: 5px 10px; font-size: 11px; }
+    .trace-panel-body { padding: 8px 10px; max-height: 240px; overflow-y: auto; }
+    .chunk-row-trace { font-size: 11px; padding: 4px 6px; margin-top: 3px; }
+    .rerank-row { padding: 4px 6px; margin-top: 3px; font-size: 11px; }
+    .eval-result-header { padding: 5px 10px; font-size: 11px; }
+    .eval-rows { padding: 6px 10px; }
+    .eval-row { padding: 3px 0; }
+    .eval-metric { width: 80px; font-size: 11px; }
+    .eval-reason { font-size: 10px; }
+    .sources { margin-top: 6px; padding-top: 4px; }
+    /* ── DB 탐색기 모달 ── */
+    #dbModal {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.45); z-index: 1000; align-items: center; justify-content: center;
+    }
+    #dbModal.open { display: flex; }
+    #dbBox {
+      background: white; border-radius: 12px; width: 820px; max-width: 95vw;
+      height: 80vh; display: flex; flex-direction: column; overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,.2);
+    }
+    #dbHeader {
+      padding: 14px 20px; border-bottom: 1px solid #eee;
+      display: flex; align-items: center; gap: 10px;
+    }
+    #dbHeader h3 { flex: 1; font-size: 15px; color: #111; }
+    #dbCloseBtn { background: none; border: none; font-size: 20px; cursor: pointer; color: #888; }
+    #dbBody { display: flex; flex: 1; min-height: 0; }
+    #dbSources {
+      width: 220px; flex-shrink: 0; border-right: 1px solid #eee;
+      overflow-y: auto; padding: 8px 0;
+    }
+    .db-src-item {
+      padding: 8px 14px; cursor: pointer; font-size: 13px;
+      display: flex; justify-content: space-between; align-items: center; gap: 8px;
+    }
+    .db-src-item:hover { background: #f5f5ff; }
+    .db-src-item.active { background: #eef2ff; font-weight: 600; color: #4f46e5; }
+    .db-src-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+    .db-src-count { font-size: 11px; color: #888; flex-shrink: 0; }
+    #dbChunks { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .db-chunk {
+      border: 1px solid #e8e8f0; border-radius: 8px; padding: 10px 12px;
+      font-size: 13px; line-height: 1.6; position: relative;
+    }
+    .db-chunk-src { font-size: 11px; color: #6366f1; margin-bottom: 4px; font-weight: 500; }
+    .db-chunk-text { color: #333; white-space: pre-wrap; word-break: break-word; }
+    .db-chunk-del {
+      position: absolute; top: 8px; right: 8px;
+      background: none; border: none; color: #ccc; font-size: 15px; cursor: pointer;
+    }
+    .db-chunk-del:hover { color: #f87171; }
+    #dbFooter {
+      padding: 10px 16px; border-top: 1px solid #eee;
+      display: flex; align-items: center; gap: 10px; font-size: 12px; color: #888;
+    }
+    /* ── DB 탭 ── */
+    #dbTabs { display:flex; gap:4px; }
+    .db-tab { padding:4px 12px; border:1px solid #e5e7eb; border-radius:6px; background:white; cursor:pointer; font-size:12px; color:#666; }
+    .db-tab.active { background:#6366f1; color:white; border-color:#6366f1; }
+    /* ── 중복 분석 ── */
+    #dbDupView { display:none; flex:1; flex-direction:column; min-height:0; }
+    #dbDupToolbar { padding:10px 16px; border-bottom:1px solid #eee; display:flex; align-items:center; gap:10px; font-size:13px; }
+    #dbDupList { flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:12px; }
+    .dup-pair { border:1px solid #e8e8f0; border-radius:10px; overflow:hidden; flex-shrink:0; }
+    .dup-pair-header { padding:8px 14px; background:#f8f8fc; display:flex; align-items:center; gap:8px; font-size:12px; color:#888; }
+    .sim-badge { background:#6366f1; color:white; border-radius:20px; padding:2px 10px; font-weight:700; font-size:12px; }
+    .dup-pair-body { display:grid; grid-template-columns:1fr 1fr; border-top:1px solid #e8e8f0; }
+    .dup-side { padding:12px; font-size:12px; line-height:1.7; }
+    .dup-side:first-child { border-right:1px solid #e8e8f0; }
+    .dup-side-src { font-weight:600; color:#6366f1; margin-bottom:6px; font-size:11px; }
+    .dup-side-text { color:#333; white-space:pre-wrap; word-break:break-word; max-height:180px; overflow-y:auto; }
+    mark.diff-del { background:#fee2e2; color:#dc2626; border-radius:2px; padding:0 1px; }
+    mark.diff-add { background:#dcfce7; color:#16a34a; border-radius:2px; padding:0 1px; }
+    .dup-actions { padding:8px 14px; background:#fafafa; border-top:1px solid #e8e8f0; display:flex; gap:6px; justify-content:flex-end; }
+    /* ── 테이블 ── */
+    .msg.assistant table { border-collapse: collapse; width: 100%; margin: 6px 0; font-size: 13px; }
+    .msg.assistant th, .msg.assistant td { border: 1px solid #e0e0e0; padding: 5px 10px; text-align: left; }
+    .msg.assistant th { background: #f5f5ff; font-weight: 600; }
+  </style>
+</head>
+<body>
+
+  <!-- 사이드바 -->
+  <div id="sidebar">
+    <h2>📚 강의자료 Q&A</h2>
+
+    <!-- PDF 선택 -->
+    <div>
+      <div class="section-label">문서 업로드</div>
+      <label class="file-label" for="fileInput">
+        <span style="font-size:18px;">📄</span>
+        <span>PDF 파일 선택</span>
+      </label>
+      <input type="file" id="fileInput" accept=".pdf" multiple />
+      <div id="fileNames"></div>
+    </div>
+
+    <!-- 청킹 방식 선택 -->
+    <div>
+      <div class="section-label">청킹 방식</div>
+      <div class="loader-selector">
+        <label class="loader-option active" id="loaderFitzOpt">
+          <input type="radio" name="loader" value="fitz" checked>
+          <span class="loader-badge badge-learn">학습용</span>
+          <div class="loader-name">fitz</div>
+          <div class="loader-desc">직접 구현<br>규칙 기반 라우팅</div>
+        </label>
+        <label class="loader-option" id="loaderDoclingOpt">
+          <input type="radio" name="loader" value="docling">
+          <span class="loader-badge badge-oss">오픈소스</span>
+          <div class="loader-name">Docling</div>
+          <div class="loader-desc">ML 레이아웃<br>자동 구조 분석</div>
+        </label>
+      </div>
+    </div>
+
+    <!-- 이미지 분석 옵션 (fitz 전용) -->
+    <div id="visionSection">
+      <label class="vision-toggle" id="visionToggleEl">
+        <input type="checkbox" id="visionMode">
+        <div class="toggle-switch"><div class="toggle-knob"></div></div>
+        <div class="vision-text">
+          <strong>🖼️ 이미지 분석 포함</strong>
+          <span>표·그래프·흐름도 자동 인식</span>
+        </div>
+      </label>
+    </div>
+
+    <!-- 액션 버튼 -->
+    <div style="display:flex;flex-direction:column;gap:7px;">
+      <button id="previewBtn" class="btn btn-primary" disabled>미리보기 →</button>
+      <button id="cancelBtn" class="btn" style="display:none;background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;">⏹ 분석 취소</button>
+      <button id="directBtn" class="btn btn-secondary" disabled>바로 색인</button>
+    </div>
+
+    <div id="sideStatus"></div>
+    <hr class="divider" />
+
+    <!-- DB 상태 -->
+    <div id="chunkBadge">색인된 청크: 확인 중...</div>
+    <button class="btn btn-secondary" onclick="openDbModal()">🗄️ DB 탐색기</button>
+  </div>
+
+  <!-- DB 탐색기 모달 -->
+  <div id="dbModal">
+    <div id="dbBox">
+      <div id="dbHeader">
+        <h3>🗄️ Vector DB 탐색기</h3>
+        <div id="dbTabs">
+          <button class="db-tab active" onclick="switchDbTab('browse')">📁 파일 탐색</button>
+          <button class="db-tab" onclick="switchDbTab('dup')">🔍 중복 분석</button>
+        </div>
+        <span id="dbTotalCount" style="font-size:12px;color:#888;margin-left:auto;"></span>
+        <button id="dbCloseBtn" onclick="closeDbModal()">✕</button>
+      </div>
+
+      <!-- 파일 탐색 -->
+      <div id="dbBody">
+        <div id="dbSources"></div>
+        <div id="dbChunks"><div style="color:#aaa;font-size:13px;padding:20px;">← 왼쪽에서 파일을 선택하세요</div></div>
+      </div>
+
+      <!-- 중복 분석 -->
+      <div id="dbDupView">
+        <div id="dbDupToolbar">
+          <span>유사도 임계값:</span>
+          <input id="dupThreshold" type="range" min="0.80" max="0.99" step="0.01" value="0.92" style="width:110px;">
+          <span id="dupThresholdVal" style="font-weight:600;color:#6366f1;width:32px;">0.92</span>
+          <button class="btn btn-primary" style="width:auto;padding:5px 14px;font-size:12px;" onclick="loadDuplicates()">분석 시작</button>
+          <span id="dupResultInfo" style="color:#888;font-size:12px;"></span>
+        </div>
+        <div id="dbDupList">
+          <div style="color:#aaa;font-size:13px;text-align:center;padding:40px;">분석 시작 버튼을 누르세요</div>
+        </div>
+      </div>
+
+      <div id="dbFooter">
+        <span id="dbStatus"></span>
+        <div style="flex:1"></div>
+        <button class="btn btn-secondary" style="width:auto;padding:5px 12px;font-size:12px;" onclick="loadDbSources()">🔄 새로고침</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 채팅 -->
+  <div id="chat">
+    <div id="chatHeader">
+      <span>강의 내용에 대해 질문하세요</span>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <div style="display:flex;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;font-size:12px;">
+          <button id="modeFixed" onclick="setMode('fixed')"
+            style="padding:5px 12px;border:none;cursor:pointer;background:#6366f1;color:white;"
+            title="Intent → Rewrite → Search → Rerank → Answer 고정 단계">
+            🔧 Modular RAG
+          </button>
+          <button id="modeAgent" onclick="setMode('agent')"
+            style="padding:5px 12px;border:none;cursor:pointer;background:white;color:#666;"
+            title="Claude가 검색 전략·횟수를 스스로 결정">
+            🤖 Agentic RAG
+          </button>
+        </div>
+        <button id="devToggle">개발자 모드</button>
+      </div>
+    </div>
+    <div id="messages">
+      <div class="msg assistant">안녕하세요! 왼쪽에서 PDF를 선택한 후 <b>미리보기</b>로 청크를 확인하거나 <b>바로 색인</b>으로 저장하세요.</div>
+    </div>
+    <div id="inputArea">
+      <input type="text" id="queryInput" placeholder="질문을 입력하세요..." />
+      <button id="sendBtn">전송</button>
+    </div>
+  </div>
+
+  <!-- 개발자 패널 -->
+  <div id="devPanel">
+    <div id="devHeader">
+      <span class="title">🔧 개발자 모드</span>
+      <span id="devChunkCount">0개 청크</span>
+      <button id="closeDevBtn">✕</button>
+    </div>
+    <div id="devToolbar">
+      <label>
+        <input type="checkbox" id="forceReindex" />
+        재색인 (기존 데이터 삭제)
+      </label>
+    </div>
+    <!-- 위: 청크 목록 -->
+    <div id="chunkList">
+      <div class="empty-state">PDF를 선택하고 미리보기를 누르세요</div>
+    </div>
+
+    <!-- 아래: 선택한 청크 내용 -->
+    <div id="chunkDetail">
+      <div id="detailHeader">
+        <span id="detailSource">← 청크를 클릭하면 내용이 여기 표시됩니다</span>
+        <span id="detailMeta"></span>
+      </div>
+      <textarea id="detailTextarea" placeholder="청크를 선택하세요"></textarea>
+    </div>
+
+    <div id="devFooter">
+      <button id="confirmBtn" disabled>✅ 색인 확정</button>
+      <div id="devStatus"></div>
+    </div>
+  </div>
+
+  <script>
+    // ── 요소 참조 ──
+    const fileInput    = document.getElementById('fileInput');
+    const previewBtn   = document.getElementById('previewBtn');
+    const directBtn    = document.getElementById('directBtn');
+    const fileNames    = document.getElementById('fileNames');
+    const visionMode   = document.getElementById('visionMode');
+    const cancelBtn    = document.getElementById('cancelBtn');
+
+    // ── Loader 선택 (fitz / Docling) ──
+    let currentLoader = 'fitz';
+    document.querySelectorAll('input[name="loader"]').forEach(radio => {
+      radio.addEventListener('change', () => {
+        currentLoader = radio.value;
+        // 카드 active 스타일 업데이트
+        document.querySelectorAll('.loader-option').forEach(opt => opt.classList.remove('active'));
+        radio.closest('.loader-option').classList.add('active');
+        // Docling 선택 시 Vision 옵션 숨기기 (Docling이 자체적으로 처리)
+        const visionSection = document.getElementById('visionSection');
+        if (visionSection) {
+          visionSection.style.display = currentLoader === 'fitz' ? '' : 'none';
+        }
+      });
+    });
+
+    // Vision 토글 checked 스타일
+    visionMode.addEventListener('change', () => {
+      const toggleEl = document.getElementById('visionToggleEl');
+      if (toggleEl) toggleEl.classList.toggle('checked', visionMode.checked);
+    });
+    const sideStatus   = document.getElementById('sideStatus');
+    const chunkBadge   = document.getElementById('chunkBadge');
+    const messages     = document.getElementById('messages');
+    const queryInput   = document.getElementById('queryInput');
+    const sendBtn      = document.getElementById('sendBtn');
+    const devToggle    = document.getElementById('devToggle');
+    const devPanel     = document.getElementById('devPanel');
+    const closeDevBtn  = document.getElementById('closeDevBtn');
+    const chunkList     = document.getElementById('chunkList');
+    const devChunkCount = document.getElementById('devChunkCount');
+    const confirmBtn    = document.getElementById('confirmBtn');
+    const devStatus     = document.getElementById('devStatus');
+    const forceReindex  = document.getElementById('forceReindex');
+    const detailSource  = document.getElementById('detailSource');
+    const detailMeta    = document.getElementById('detailMeta');
+    const detailTextarea= document.getElementById('detailTextarea');
+
+    let currentChunks = [];
+    let selectedIdx   = null;
+
+    function renderMd(md) {
+      const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const inl = s => esc(s)
+        .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g,'<em>$1</em>')
+        .replace(/`(.+?)`/g,'<code>$1</code>');
+
+      const lines = md.replace(/\r\n/g,'\n').split('\n');
+      const out = []; let i = 0;
+
+      while (i < lines.length) {
+        const line = lines[i];
+        if (!line.trim()) { i++; continue; }
+
+        // 헤더
+        const hm = line.match(/^(#{1,3})\s+(.+)/);
+        if (hm) { out.push(`<h${hm[1].length}>${inl(hm[2])}</h${hm[1].length}>`); i++; continue; }
+
+        // HR
+        if (/^---+$/.test(line.trim())) { out.push('<hr>'); i++; continue; }
+
+        // 테이블 (다음 줄이 구분선인 경우)
+        if (line.startsWith('|') && i+1 < lines.length && /^\|[\-\:\s\|]+\|$/.test(lines[i+1])) {
+          const ths = line.split('|').slice(1,-1).map(c=>`<th>${inl(c.trim())}</th>`).join('');
+          i += 2;
+          const trs = [];
+          while (i < lines.length && lines[i].startsWith('|')) {
+            const tds = lines[i].split('|').slice(1,-1).map(c=>`<td>${inl(c.trim())}</td>`).join('');
+            trs.push(`<tr>${tds}</tr>`); i++;
+          }
+          out.push(`<table><thead><tr>${ths}</tr></thead><tbody>${trs.join('')}</tbody></table>`);
+          continue;
+        }
+
+        // 순서 없는 목록
+        if (/^[-*] /.test(line)) {
+          const items = [];
+          while (i < lines.length && /^[-*] /.test(lines[i])) {
+            items.push(`<li>${inl(lines[i].slice(2))}</li>`); i++;
+          }
+          out.push(`<ul>${items.join('')}</ul>`); continue;
+        }
+
+        // 순서 있는 목록
+        if (/^\d+\.\s/.test(line)) {
+          const items = [];
+          while (i < lines.length && /^\d+\.\s/.test(lines[i])) {
+            items.push(`<li>${inl(lines[i].replace(/^\d+\.\s/,''))}</li>`); i++;
+          }
+          out.push(`<ol>${items.join('')}</ol>`); continue;
+        }
+
+        // 문단
+        const paras = [];
+        while (i < lines.length && lines[i].trim() && !/^(#{1,3}\s|[-*] |\d+\.\s|---|\|)/.test(lines[i])) {
+          paras.push(inl(lines[i])); i++;
+        }
+        if (paras.length) out.push(`<p>${paras.join('<br>')}</p>`);
+      }
+      return out.join('\n');
+    }
+
+    function formatForDisplay(text) {
+      return text
+        .replace(/([^\n])([ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ] )/g, '$1\n\n$2')           // 로마숫자 섹션
+        .replace(/([^\n])([가나다라마바사아자차카타파하]\. )/g, '$1\n\n$2') // 가. 나. 소제목
+        .replace(/([^\n])○/g, '$1\n○')                                  // ○ 항목
+        .replace(/([^\n])-([가-힣(])/g, '$1\n-$2')                      // -(설명) 형태 항목
+        .replace(/([가-힣])\.\s+(?=[가-힣○Ⅰ-Ⅹ\d])/g, '$1.\n')          // 마침표 뒤 줄바꿈 (숫자 포함)
+        .replace(/([가-힣])(\d{4}년)/g, '$1\n$2')                       // 연도 앞 줄바꿈 (위하여2026년 등)
+        .trim();
+    }
+
+    // ── 파일 선택 ──
+    fileInput.addEventListener('change', () => {
+      const files = [...fileInput.files];
+      fileNames.textContent = files.map(f => f.name).join('\n');
+      const ok = files.length > 0;
+      previewBtn.disabled = !ok;
+      directBtn.disabled  = !ok;
+    });
+
+    // ── 이미지 분석 취소 ──
+    cancelBtn.addEventListener('click', async () => {
+      cancelBtn.disabled = true;
+      cancelBtn.textContent = '취소 중...';
+      await fetch('/cancel', { method: 'POST' });
+    });
+
+    // ── 개발자 패널 토글 ──
+    devToggle.addEventListener('click', () => {
+      const visible = devPanel.classList.toggle('visible');
+      devToggle.classList.toggle('active', visible);
+    });
+    closeDevBtn.addEventListener('click', () => {
+      devPanel.classList.remove('visible');
+      devToggle.classList.remove('active');
+    });
+
+    // ── 청크 목록 렌더링 ──
+    function renderChunks() {
+      if (currentChunks.length === 0) {
+        chunkList.innerHTML = '<div class="empty-state">청크가 없습니다</div>';
+        confirmBtn.disabled = true;
+        devChunkCount.textContent = '0개 청크';
+        detailSource.textContent = '← 청크를 클릭하면 내용이 여기 표시됩니다';
+        detailMeta.textContent = '';
+        detailTextarea.value = '';
+        return;
+      }
+
+      devChunkCount.textContent = `${currentChunks.length}개 청크`;
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = `✅ 색인 확정 (${currentChunks.length}개)`;
+
+      chunkList.innerHTML = '';
+      currentChunks.forEach((chunk, i) => {
+        const chars = chunk.content.length;
+        const row = document.createElement('div');
+        row.className = 'chunk-row' + (i === selectedIdx ? ' selected' : '');
+        row.innerHTML = `
+          <span class="chunk-num">${i + 1}</span>
+          <span class="chunk-source">${chunk.source}</span>
+          <span class="chunk-meta">${chars}자</span>
+          <button class="chunk-del" data-i="${i}">✕</button>
+        `;
+        row.addEventListener('click', e => {
+          if (e.target.classList.contains('chunk-del')) return;
+          selectChunk(i);
+        });
+        chunkList.appendChild(row);
+      });
+    }
+
+    // ── 청크 선택 → 아래에 내용 표시 ──
+    function selectChunk(i) {
+      syncDetail();
+      selectedIdx = i;
+
+      // 목록 하이라이트 갱신
+      document.querySelectorAll('.chunk-row').forEach((r, idx) => {
+        r.classList.toggle('selected', idx === i);
+      });
+
+      const chunk = currentChunks[i];
+      detailSource.textContent = chunk.source;
+      detailMeta.textContent = `${chunk.content.length}자`;
+      detailTextarea.value = formatForDisplay(chunk.content);
+      detailTextarea.focus();
+    }
+
+    // 현재 편집 내용 → currentChunks에 저장
+    function syncDetail() {
+      if (selectedIdx !== null && currentChunks[selectedIdx]) {
+        currentChunks[selectedIdx].content = detailTextarea.value;
+      }
+    }
+
+    // 청크 삭제
+    chunkList.addEventListener('click', e => {
+      if (!e.target.classList.contains('chunk-del')) return;
+      syncDetail();
+      const i = parseInt(e.target.dataset.i);
+      currentChunks.splice(i, 1);
+      if (selectedIdx === i) selectedIdx = null;
+      else if (selectedIdx > i) selectedIdx--;
+      renderChunks();
+      if (selectedIdx !== null) selectChunk(selectedIdx);
+    });
+
+    // ── 청크 1개 추가 (스트리밍용) ──
+    function appendChunkRow(chunk, i, mode) {
+      if (i === 0) chunkList.innerHTML = ''; // empty-state 제거
+      const chars = chunk.content.length;
+      const badge = mode === 'vision'
+        ? '<span style="font-size:10px;background:#f0f4ff;color:#6366f1;border:1px solid #c7d2fe;border-radius:4px;padding:1px 5px;flex-shrink:0;">Vision</span>'
+        : mode === 'table'
+        ? '<span style="font-size:10px;background:#fff7ed;color:#ea580c;border:1px solid #fed7aa;border-radius:4px;padding:1px 5px;flex-shrink:0;">Table</span>'
+        : '<span style="font-size:10px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:4px;padding:1px 5px;flex-shrink:0;">Text</span>';
+      const row = document.createElement('div');
+      row.className = 'chunk-row' + (i === selectedIdx ? ' selected' : '');
+      row.innerHTML = `
+        <span class="chunk-num">${i + 1}</span>
+        ${badge}
+        <span class="chunk-source">${chunk.source}</span>
+        <span class="chunk-meta">${chars}자</span>
+        <button class="chunk-del" data-i="${i}">✕</button>
+      `;
+      row.addEventListener('click', e => {
+        if (e.target.classList.contains('chunk-del')) return;
+        selectChunk(i);
+      });
+      chunkList.appendChild(row);
+      chunkList.scrollTop = chunkList.scrollHeight;
+      devChunkCount.textContent = `${i + 1}개 청크`;
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = `✅ 색인 확정 (${i + 1}개)`;
+    }
+
+    // ── 미리보기 (SSE 스트리밍) ──
+    previewBtn.addEventListener('click', async () => {
+      const files = [...fileInput.files];
+      previewBtn.disabled = true;
+      previewBtn.textContent = '처리 중...';
+      currentChunks = [];
+      selectedIdx = null;
+
+      const isVision = visionMode.checked;
+      cancelBtn.style.display = isVision ? 'block' : 'none';
+      cancelBtn.disabled = false;
+      cancelBtn.textContent = '⏹ 취소';
+
+      devPanel.classList.add('visible');
+      devToggle.classList.add('active');
+      chunkList.innerHTML = '<div class="empty-state">처리 중...</div>';
+
+      for (const file of files) {
+        const form = new FormData();
+        form.append('file', file);
+        form.append('vision', isVision);
+        form.append('loader', currentLoader);
+
+        try {
+          const res = await fetch('/preview-stream', { method: 'POST', body: form });
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop();
+
+            for (const line of lines) {
+              if (!line.startsWith('data: ')) continue;
+              const event = JSON.parse(line.slice(6));
+
+              if (event.type === 'chunk') {
+                currentChunks.push(event.chunk);
+                appendChunkRow(event.chunk, currentChunks.length - 1, event.mode);
+                sideStatus.textContent = `처리 중: ${event.page}/${event.total}페이지`;
+                if (currentChunks.length === 1) selectChunk(0);
+
+              } else if (event.type === 'done') {
+                sideStatus.textContent = `✅ ${event.total}개 청크 완료`;
+
+              } else if (event.type === 'cancelled') {
+                sideStatus.textContent = `⏹ ${event.processed}개 처리 후 취소`;
+              }
+            }
+          }
+        } catch {
+          sideStatus.textContent += `\n❌ ${file.name} 실패`;
+        }
+      }
+
+      cancelBtn.style.display = 'none';
+      previewBtn.disabled = false;
+      previewBtn.textContent = '미리보기 →';
+    });
+
+    // ── 바로 색인 ──
+    directBtn.addEventListener('click', async () => {
+      const files = [...fileInput.files];
+      directBtn.disabled = true;
+      sideStatus.textContent = '색인 중...';
+
+      for (const file of files) {
+        const form = new FormData();
+        form.append('file', file);
+        try {
+          const res  = await fetch('/upload', { method: 'POST', body: form });
+          const data = await res.json();
+          sideStatus.textContent += '\n✅ ' + data.message;
+        } catch {
+          sideStatus.textContent += `\n❌ ${file.name} 실패`;
+        }
+      }
+
+      directBtn.disabled = false;
+      refreshCount();
+    });
+
+    // ── 색인 확정 ──
+    confirmBtn.addEventListener('click', async () => {
+      syncDetail();
+
+      confirmBtn.disabled = true;
+      devStatus.textContent = '저장 중...';
+
+      try {
+        const res  = await fetch('/index', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chunks: currentChunks,
+            force:  forceReindex.checked
+          })
+        });
+        const data = await res.json();
+        devStatus.textContent = data.ok ? `✅ ${data.message}` : `❌ ${data.message}`;
+        if (data.ok) refreshCount();
+      } catch {
+        devStatus.textContent = '❌ 서버 오류';
+      }
+
+      confirmBtn.disabled = false;
+    });
+
+    // ── 청크 수 새로고침 ──
+    async function refreshCount() {
+      try {
+        const res  = await fetch('/status');
+        const data = await res.json();
+        chunkBadge.textContent = `색인된 청크: ${data.count}개`;
+      } catch {
+        chunkBadge.textContent = '서버 연결 대기 중...';
+      }
+    }
+
+    // ── 채팅 ──
+    function addMsg(role, text) {
+      const div = document.createElement('div');
+      div.className = 'msg ' + role;
+      div.textContent = text;
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+      return div;
+    }
+
+    function makePanel(icon, title, contentHtml) {
+      const panel = document.createElement('div');
+      panel.className = 'trace-panel';
+      panel.innerHTML = `
+        <div class="trace-panel-header">
+          <span>${icon} ${title}</span>
+          <span class="trace-chevron">▶</span>
+        </div>
+        <div class="trace-panel-body">${contentHtml}</div>
+      `;
+      panel.querySelector('.trace-panel-header').addEventListener('click', () => {
+        panel.classList.toggle('open');
+      });
+      return panel;
+    }
+
+    function buildTrace(div, data) {
+      if (data.sources?.length) {
+        const s = document.createElement('div');
+        s.className = 'sources';
+        s.textContent = '📄 ' + [...new Set(data.sources)].join('\n📄 ');
+        div.appendChild(s);
+      }
+
+      const debug = data.debug;
+      if (!debug) return;
+
+      const panels = document.createElement('div');
+      panels.className = 'trace-panels';
+
+      // ── 패널 1: 재작성 ──────────────────────────────────────
+      const rw      = debug.rewrite;
+      const intent  = debug.intent;
+      const changed = rw && rw.rewritten !== debug.query;
+
+      let rwHtml = '';
+      if (intent) {
+        const ok = intent.is_lecture !== false;
+        rwHtml += `<div class="search-intent" style="margin-bottom:10px;">
+          <b style="color:${ok ? '#16a34a' : '#dc2626'};">${ok ? '✅ 강의 관련' : '❌ 강의 무관'}</b>
+          ${intent.reason ? `<span style="color:#888;font-size:11px;margin-left:6px;">${intent.reason}</span>` : ''}
+        </div>`;
+      }
+      rwHtml += `
+        <div class="rw-label">원본</div>
+        <div class="rw-original">${debug.query}</div>
+        <div class="rw-label" style="margin-top:8px;">
+          재작성 ${changed ? '' : '<span style="color:#f59e0b;font-size:10px;"> — 변경 없음</span>'}
+        </div>
+        <div class="rw-result">${rw?.rewritten ?? debug.query}</div>
+        ${rw?.reason ? `<div class="rw-reason">💡 ${rw.reason}</div>` : ''}
+      `;
+      panels.appendChild(makePanel('✏️', '재작성', rwHtml));
+
+      // ── 패널 2: 검색 ────────────────────────────────────────
+      const retrieved = debug.retrieved || [];
+      const searchHtml = retrieved.map(c => `
+        <div class="chunk-row-trace">
+          <span class="sim-score">${c.similarity}</span>
+          <span class="chunk-src">${c.source}</span>
+          <span class="chunk-prev">${c.preview}...</span>
+        </div>`).join('');
+      panels.appendChild(makePanel('🔍', `검색 (top-${retrieved.length})`, searchHtml || '<span style="color:#aaa;">결과 없음</span>'));
+
+      // ── 패널 3: Re-ranking ──────────────────────────────────
+      const reranked = debug.reranked || [];
+      const usedCount = reranked.filter(r => r.used).length;
+
+      const rerankHtml = reranked.map(r => {
+        const diff = r.original_rank - r.new_rank;
+        const rankClass = diff > 0 ? 'rank-up' : diff < 0 ? 'rank-down' : 'rank-same';
+        const rankIcon  = diff > 0 ? `↑${diff}` : diff < 0 ? `↓${Math.abs(diff)}` : '→';
+        return `
+          <div class="rerank-row ${r.used ? 'used' : 'unused'}">
+            <span class="rank-change ${rankClass}">${rankIcon}</span>
+            <span class="rerank-scores">${r.original_rank}→${r.new_rank}위 &nbsp; <span class="rerank-score">${r.score}점</span></span>
+            <div class="rerank-info">
+              <div class="rerank-src">${r.source}</div>
+              <div class="rerank-reason">${r.reason}</div>
+            </div>
+          </div>`;
+      }).join('');
+      panels.appendChild(makePanel('📊', `Re-ranking (${usedCount}개 사용)`, rerankHtml || '<span style="color:#aaa;">결과 없음</span>'));
+
+      div.appendChild(panels);
+
+      // ── 평가 버튼 ──────────────────────────────────────────
+      if (debug.eval_context) {
+        const evalBtn = document.createElement('button');
+        evalBtn.className = 'eval-btn';
+        evalBtn.textContent = '📈 평가 요청';
+
+        evalBtn.addEventListener('click', async () => {
+          evalBtn.disabled = true;
+          evalBtn.textContent = '평가 중...';
+
+          try {
+            const res  = await fetch('/evaluate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                query:   debug.query,
+                context: debug.eval_context,
+                answer:  div.dataset.rawText || div.textContent,
+              })
+            });
+            const result = await res.json();
+            renderEvalResult(div, result);
+          } catch {
+            evalBtn.textContent = '❌ 평가 실패';
+            evalBtn.disabled = false;
+          }
+        });
+
+        div.appendChild(evalBtn);
+      }
+    }
+
+    function barColor(score) {
+      if (score >= 4) return '#4ade80';
+      if (score >= 3) return '#fbbf24';
+      return '#f87171';
+    }
+
+    function renderEvalResult(div, result) {
+      const metrics = [
+        { key: 'faithfulness',      label: '충실도' },
+        { key: 'answer_relevance',  label: '답변 관련성' },
+        { key: 'context_relevance', label: '검색 품질' },
+      ];
+
+      const scores  = metrics.map(m => result[m.key]?.score ?? 0);
+      const avg     = (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1);
+
+      const rowsHtml = metrics.map(m => {
+        const s = result[m.key]?.score ?? 0;
+        const r = result[m.key]?.reason ?? '';
+        const w = (s / 5) * 100;
+        return `
+          <div class="eval-row">
+            <span class="eval-metric">${m.label}</span>
+            <div class="eval-bar-wrap">
+              <div class="eval-bar" style="width:${w}%;background:${barColor(s)};"></div>
+            </div>
+            <span class="eval-score-num" style="color:${barColor(s)};">${s}/5</span>
+            <span class="eval-reason">${r}</span>
+          </div>`;
+      }).join('');
+
+      const panel = document.createElement('div');
+      panel.className = 'eval-result';
+      panel.innerHTML = `
+        <div class="eval-result-header">
+          📈 평가 결과
+          <span class="eval-avg">평균 ${avg}/5</span>
+        </div>
+        <div class="eval-rows">${rowsHtml}</div>
+      `;
+
+      // 기존 평가 결과 있으면 교체
+      const old = div.querySelector('.eval-result');
+      if (old) old.replaceWith(panel);
+      else div.appendChild(panel);
+
+      // 버튼 제거
+      const btn = div.querySelector('.eval-btn');
+      if (btn) btn.remove();
+    }
+
+    // 모드 전환
+    let currentMode = 'fixed';
+    function setMode(mode) {
+      currentMode = mode;
+      document.getElementById('modeFixed').style.background = mode === 'fixed' ? '#6366f1' : 'white';
+      document.getElementById('modeFixed').style.color      = mode === 'fixed' ? 'white'   : '#666';
+      document.getElementById('modeAgent').style.background = mode === 'agent' ? '#6366f1' : 'white';
+      document.getElementById('modeAgent').style.color      = mode === 'agent' ? 'white'   : '#666';
+    }
+
+    // 대화 히스토리 — Claude에게 넘길 이전 대화 쌍
+    const chatHistory = [];
+
+    async function send() {
+      const query = queryInput.value.trim();
+      if (!query) return;
+
+      addMsg('user', query);
+      queryInput.value = '';
+      sendBtn.disabled = true;
+
+      const ph = addMsg('assistant', '답변 생성 중...');
+      try {
+        const endpoint = currentMode === 'agent' ? '/chat-agent' : '/chat';
+        const res  = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query, history: chatHistory })
+        });
+        const data = await res.json();
+        ph.innerHTML = renderMd(data.answer);
+        ph.dataset.rawText = data.answer;
+
+        if (data.debug?.mode === 'agent') buildAgentTrace(ph, data);
+        else buildTrace(ph, data);
+
+        // 이번 대화를 히스토리에 추가
+        chatHistory.push({ role: 'user',      content: query });
+        chatHistory.push({ role: 'assistant',  content: data.answer });
+      } catch {
+        ph.textContent = '오류가 발생했습니다.';
+      }
+      sendBtn.disabled = false;
+      queryInput.focus();
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function buildAgentTrace(div, data) {
+      if (data.sources?.length) {
+        const s = document.createElement('div');
+        s.className = 'sources';
+        s.textContent = '📄 ' + [...new Set(data.sources)].join('\n📄 ');
+        div.appendChild(s);
+      }
+
+      const debug = data.debug;
+      if (!debug?.tool_calls) return;
+
+      const calls   = debug.tool_calls;
+      const turns   = debug.turns ?? calls.length;
+
+      if (!calls.length) return;
+
+      let bodyHtml = `<div style="font-size:12px;color:#888;margin-bottom:8px;">총 ${turns}번 검색</div>`;
+      calls.forEach((c, i) => {
+        bodyHtml += `
+          <div style="margin-bottom:8px;padding:8px;background:#f8f8fc;border-radius:6px;border-left:3px solid #6366f1;">
+            <div style="font-size:11px;color:#888;margin-bottom:3px;">${i + 1}번째 검색</div>
+            <div style="font-weight:600;color:#6366f1;margin-bottom:4px;">"${c.query}"</div>
+            <div style="font-size:11px;color:#999;">${c.preview}...</div>
+            ${c.sources?.length ? `<div style="font-size:11px;color:#4ade80;margin-top:3px;">✅ ${c.sources.join(', ')}</div>` : '<div style="font-size:11px;color:#f87171;margin-top:3px;">❌ 유사도 낮음</div>'}
+          </div>`;
+      });
+
+      const panel = document.createElement('div');
+      panel.className = 'trace-panels';
+      panel.appendChild(makePanel('🤖', `Agent 검색 흐름 (${turns}회)`, bodyHtml));
+      div.appendChild(panel);
+    }
+
+    sendBtn.addEventListener('click', send);
+    queryInput.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
+
+    refreshCount();
+
+    // ── DB 탐색기 ──────────────────────────────────────────────
+    let dbCurrentSource = null;
+
+    async function openDbModal() {
+      document.getElementById('dbModal').classList.add('open');
+      await loadDbSources();
+    }
+
+    function closeDbModal() {
+      document.getElementById('dbModal').classList.remove('open');
+    }
+
+    document.getElementById('dbModal').addEventListener('click', e => {
+      if (e.target === document.getElementById('dbModal')) closeDbModal();
+    });
+
+    async function loadDbSources() {
+      const sourcesEl = document.getElementById('dbSources');
+      sourcesEl.innerHTML = '<div style="padding:12px;color:#aaa;font-size:12px;">로딩 중...</div>';
+      const res = await fetch('/db/sources');
+      const sources = await res.json();
+      const total = sources.reduce((s, r) => s + r.count, 0);
+      document.getElementById('dbTotalCount').textContent = `총 ${total}개 청크`;
+
+      if (!sources.length) {
+        sourcesEl.innerHTML = '<div style="padding:12px;color:#aaa;font-size:12px;">저장된 데이터 없음</div>';
+        return;
+      }
+
+      sourcesEl.innerHTML = '';
+      // 파일명 기준으로 그룹핑
+      const files = {};
+      for (const r of sources) {
+        const file = r.source.split(' - ')[0];
+        files[file] = (files[file] || 0) + r.count;
+      }
+      for (const [file, count] of Object.entries(files)) {
+        const div = document.createElement('div');
+        div.className = 'db-src-item' + (file === dbCurrentSource ? ' active' : '');
+        div.innerHTML = `<span class="db-src-name" title="${file}">${file}</span><span class="db-src-count">${count}개</span>`;
+        div.addEventListener('click', () => loadDbChunks(file, div));
+        sourcesEl.appendChild(div);
+      }
+    }
+
+    async function loadDbChunks(source, el) {
+      dbCurrentSource = source;
+      document.querySelectorAll('.db-src-item').forEach(d => d.classList.remove('active'));
+      el.classList.add('active');
+
+      const chunksEl = document.getElementById('dbChunks');
+      chunksEl.innerHTML = '<div style="color:#aaa;font-size:13px;padding:20px;">로딩 중...</div>';
+
+      const res = await fetch(`/db/chunks?source=${encodeURIComponent(source)}&limit=100`);
+      const chunks = await res.json();
+
+      if (!chunks.length) {
+        chunksEl.innerHTML = '<div style="color:#aaa;font-size:13px;padding:20px;">청크 없음</div>';
+        return;
+      }
+
+      chunksEl.innerHTML = '';
+      document.getElementById('dbStatus').textContent = `${source} — ${chunks.length}개 청크`;
+
+      for (const chunk of chunks) {
+        const div = document.createElement('div');
+        div.className = 'db-chunk';
+        div.dataset.id = chunk.id;
+        div.innerHTML = `
+          <div class="db-chunk-src">${chunk.source}</div>
+          <div class="db-chunk-text">${chunk.content}</div>
+          <button class="db-chunk-del" title="삭제" onclick="deleteDbChunk(${chunk.id}, this)">✕</button>
+        `;
+        chunksEl.appendChild(div);
+      }
+    }
+
+    // ── DB 탭 전환 ──────────────────────────────────────────────
+    function switchDbTab(tab) {
+      document.getElementById('dbBody').style.display    = tab === 'browse' ? 'flex' : 'none';
+      document.getElementById('dbDupView').style.display = tab === 'dup'    ? 'flex' : 'none';
+      document.querySelectorAll('.db-tab').forEach((b, i) => {
+        b.classList.toggle('active', (i === 0 && tab === 'browse') || (i === 1 && tab === 'dup'));
+      });
+    }
+
+    // ── 중복 분석 ────────────────────────────────────────────────
+    document.getElementById('dupThreshold').addEventListener('input', function () {
+      document.getElementById('dupThresholdVal').textContent = parseFloat(this.value).toFixed(2);
+    });
+
+    function simpleDiff(a, b) {
+      const tokA = a.split(/(\s+)/), tokB = b.split(/(\s+)/);
+      const setA = new Set(a.split(/\s+/)), setB = new Set(b.split(/\s+/));
+      const esc  = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const htmlA = tokA.map(w => w.trim() && !setB.has(w.trim()) ? `<mark class="diff-del">${esc(w)}</mark>` : esc(w)).join('');
+      const htmlB = tokB.map(w => w.trim() && !setA.has(w.trim()) ? `<mark class="diff-add">${esc(w)}</mark>` : esc(w)).join('');
+      return { htmlA, htmlB };
+    }
+
+    async function loadDuplicates() {
+      const threshold = document.getElementById('dupThreshold').value;
+      const listEl    = document.getElementById('dbDupList');
+      listEl.innerHTML = '<div style="color:#aaa;font-size:13px;text-align:center;padding:40px;">분석 중...</div>';
+      document.getElementById('dupResultInfo').textContent = '';
+
+      const res   = await fetch(`/db/duplicates?threshold=${threshold}`);
+      const pairs = await res.json();
+
+      if (!pairs.length) {
+        listEl.innerHTML = `<div style="color:#aaa;font-size:13px;text-align:center;padding:40px;">유사도 ${parseFloat(threshold).toFixed(2)} 이상인 중복 없음 ✅</div>`;
+        return;
+      }
+
+      document.getElementById('dupResultInfo').textContent = `${pairs.length}쌍 발견`;
+      listEl.innerHTML = '';
+
+      for (const pair of pairs) {
+        listEl.appendChild(buildDupCard(pair));
+      }
+    }
+
+    function buildDupCard(pair) {
+      const { htmlA, htmlB } = simpleDiff(pair.a.content || '', pair.b.content || '');
+
+      const card = document.createElement('div');
+      card.className = 'dup-pair';
+
+      // 헤더
+      const hdr = document.createElement('div');
+      hdr.className = 'dup-pair-header';
+      const badge = document.createElement('span');
+      badge.className = 'sim-badge';
+      badge.textContent = `유사도 ${Math.round(pair.similarity * 100)}%`;
+      const fileLabel = document.createElement('span');
+      fileLabel.textContent = (pair.a.source || '').split(' - ')[0];
+      hdr.append(badge, fileLabel);
+      card.appendChild(hdr);
+
+      // 본문 (2컬럼 비교)
+      const body = document.createElement('div');
+      body.className = 'dup-pair-body';
+
+      const makeSide = (source, html) => {
+        const side = document.createElement('div');
+        side.className = 'dup-side';
+        const src = document.createElement('div');
+        src.className = 'dup-side-src';
+        src.textContent = source || '';
+        const txt = document.createElement('div');
+        txt.className = 'dup-side-text';
+        txt.innerHTML = html || '(내용 없음)';
+        side.append(src, txt);
+        return side;
+      };
+      body.append(makeSide(pair.a.source, htmlA), makeSide(pair.b.source, htmlB));
+      card.appendChild(body);
+
+      // 액션 버튼
+      const actions = document.createElement('div');
+      actions.className = 'dup-actions';
+      const makeBtn = (label, fn) => {
+        const b = document.createElement('button');
+        b.className = 'btn btn-secondary';
+        b.style.cssText = 'width:auto;padding:4px 10px;font-size:12px;';
+        b.textContent = label;
+        b.onclick = fn;
+        return b;
+      };
+      actions.append(
+        makeBtn('왼쪽 삭제',  () => deleteDupSide(pair.a.id, card)),
+        makeBtn('오른쪽 삭제', () => deleteDupSide(pair.b.id, card)),
+        makeBtn('건너뜀',      () => card.remove())
+      );
+      card.appendChild(actions);
+
+      return card;
+    }
+
+    async function deleteDupSide(id, card) {
+      await fetch(`/db/chunk/${id}`, { method: 'DELETE' });
+      card.remove();
+      refreshCount();
+    }
+
+    async function deleteDbChunk(id, btn) {
+      if (!confirm('이 청크를 삭제하시겠습니까?')) return;
+      await fetch(`/db/chunk/${id}`, { method: 'DELETE' });
+      btn.closest('.db-chunk').remove();
+      refreshCount();
+      await loadDbSources();
+    }
+  </script>
+</body>
+</html>
