@@ -28,3 +28,4 @@ Thumbs.db
 
 # Docling 모델 캐시
 ~/.cache/docling/
+.gstack/

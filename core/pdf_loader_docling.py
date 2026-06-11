@@ -55,8 +55,12 @@ def _get_converter():
 NOISE_MIN_CHARS = 10
 
 
-def _convert_to_chunks(pdf_path: str, filename: str) -> list[dict]:
-    """Docling으로 PDF 변환 후 HierarchicalChunker로 청크 생성."""
+def _convert_to_chunks(pdf_path: str, filename: str,
+                        page_start: int = None, page_end: int = None) -> list[dict]:
+    """Docling으로 PDF 변환 후 HierarchicalChunker로 청크 생성.
+
+    page_start/page_end: 1-indexed, 둘 다 포함(inclusive). None이면 전체 페이지.
+    """
     converter = _get_converter()
 
     print(f"  [Docling] {filename} 변환 중...", file=sys.stderr)
@@ -80,6 +84,13 @@ def _convert_to_chunks(pdf_path: str, filename: str) -> list[dict]:
             for prov in getattr(ref, "prov", []):
                 page_nos.add(prov.page_no)
 
+        # 페이지 범위 필터링 (페이지 정보가 없는 청크는 항상 포함)
+        if page_nos and (page_start or page_end):
+            lo = page_start or 1
+            hi = page_end or float("inf")
+            if not any(lo <= p <= hi for p in page_nos):
+                continue
+
         page_str     = f"{min(page_nos)}페이지" if page_nos else "알 수 없음"
         heading_path = " > ".join(headings) if headings else ""
 
@@ -89,6 +100,8 @@ def _convert_to_chunks(pdf_path: str, filename: str) -> list[dict]:
         chunks.append({
             "content": content,
             "source":  f"{filename} - {page_str}" + (f" [{heading_path}]" if heading_path else ""),
+            # Docling 청크는 이미 섹션 단위라 parent == child
+            "parent_content": content,
         })
         print(f"  [Docling] 청크: {page_str} [{heading_path}] ({len(text)}자)",
               file=sys.stderr)
@@ -98,16 +111,16 @@ def _convert_to_chunks(pdf_path: str, filename: str) -> list[dict]:
 
 # ── 공개 API (pdf_loader.py와 동일한 인터페이스) ──────────────
 def load_pdf(pdf_path: str, filename: str = None, vision: bool = False,
-             cancel_check=None) -> list[dict]:
+             cancel_check=None, page_start: int = None, page_end: int = None) -> list[dict]:
     """청크 리스트 반환"""
     if not DOCLING_AVAILABLE:
         raise RuntimeError("Docling 미설치. `pip install docling` 실행 필요.")
     name = filename or Path(pdf_path).name
-    return _convert_to_chunks(pdf_path, name)
+    return _convert_to_chunks(pdf_path, name, page_start, page_end)
 
 
 def stream_pdf(pdf_path: str, filename: str = None, vision: bool = False,
-               cancel_check=None):
+               cancel_check=None, page_start: int = None, page_end: int = None):
     """
     pdf_loader.py와 동일한 이벤트 형식으로 yield.
     Docling은 전체 PDF를 한 번에 처리하므로
@@ -122,7 +135,7 @@ def stream_pdf(pdf_path: str, filename: str = None, vision: bool = False,
         return
 
     name   = filename or Path(pdf_path).name
-    chunks = _convert_to_chunks(pdf_path, name)
+    chunks = _convert_to_chunks(pdf_path, name, page_start, page_end)
     total  = len(chunks)
 
     for i, chunk in enumerate(chunks, 1):

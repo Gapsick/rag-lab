@@ -55,13 +55,13 @@
     #fileInput { display: none; }
     #fileNames { font-size: 12px; color: #6366f1; font-weight: 500; margin-top: 5px; line-height: 1.5; }
 
-    /* ── 로더 선택기 ── */
-    .loader-selector {
+    /* ── 로더 선택기 / 컬렉션(MCP 서버) 선택기 ── */
+    .loader-selector, .coll-selector {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 6px;
     }
-    .loader-option {
+    .loader-option, .coll-option {
       border: 1.5px solid #e5e7eb;
       border-radius: 10px;
       padding: 10px 10px 8px;
@@ -70,22 +70,22 @@
       transition: all 0.15s;
       position: relative;
     }
-    .loader-option:hover { border-color: #a5b4fc; background: #fafbff; }
-    .loader-option.active { border-color: #6366f1; background: #eef2ff; }
-    .loader-option input { display: none; }
-    .loader-name {
+    .loader-option:hover, .coll-option:hover { border-color: #a5b4fc; background: #fafbff; }
+    .loader-option.active, .coll-option.active { border-color: #6366f1; background: #eef2ff; }
+    .loader-option input, .coll-option input { display: none; }
+    .loader-name, .coll-name {
       font-size: 13px;
       font-weight: 700;
       color: #374151;
       margin-bottom: 3px;
     }
-    .loader-option.active .loader-name { color: #4f46e5; }
-    .loader-desc {
+    .loader-option.active .loader-name, .coll-option.active .coll-name { color: #4f46e5; }
+    .loader-desc, .coll-desc {
       font-size: 10px;
       color: #9ca3af;
       line-height: 1.4;
     }
-    .loader-option.active .loader-desc { color: #818cf8; }
+    .loader-option.active .loader-desc, .coll-option.active .coll-desc { color: #818cf8; }
     .loader-badge {
       position: absolute;
       top: 6px; right: 6px;
@@ -511,6 +511,59 @@
       font-size: 12px;
       color: #45475a;
     }
+    .detail-tag {
+      font-size: 10px;
+      border-radius: 4px;
+      padding: 1px 6px;
+      flex-shrink: 0;
+      border: 1px solid;
+    }
+    .detail-tag.child  { color: #89b4fa; background: #1e2a47; border-color: #3b4a78; }
+    .detail-tag.parent { color: #f9e2af; background: #3a341e; border-color: #6b5d2f; }
+    #parentToggleBtn {
+      font-size: 11px;
+      color: #cba6f7;
+      background: #2a2a4a;
+      border: 1px solid #45475a;
+      border-radius: 4px;
+      padding: 3px 8px;
+      cursor: pointer;
+    }
+    #parentToggleBtn:hover { background: #38385a; }
+    #overlapNotice {
+      flex-shrink: 0;
+      padding: 8px 16px;
+      background: #2a2515;
+      border-bottom: 1px solid #45475a;
+    }
+    .overlap-label {
+      font-size: 11px;
+      color: #f9e2af;
+      margin-bottom: 4px;
+    }
+    #overlapPreview {
+      font-size: 13px;
+      font-family: 'Consolas', monospace;
+      color: #f9e2af;
+      background: #3a341e;
+      border: 1px solid #6b5d2f;
+      border-radius: 4px;
+      padding: 6px 10px;
+      white-space: pre-wrap;
+      max-height: 80px;
+      overflow-y: auto;
+    }
+    #parentView {
+      flex: 1;
+      width: 100%;
+      padding: 16px;
+      background: #181825;
+      color: #cdd6f4;
+      font-size: 14px;
+      line-height: 1.8;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
     #detailTextarea {
       flex: 1;
       width: 100%;
@@ -636,6 +689,131 @@
       padding: 10px 16px; border-top: 1px solid #eee;
       display: flex; align-items: center; gap: 10px; font-size: 12px; color: #888;
     }
+    /* ── Context Window 모달 ── */
+    #ctxModal {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.45); z-index: 1000; align-items: center; justify-content: center;
+    }
+    #ctxModal.open { display: flex; }
+    #ctxBox {
+      background: white; border-radius: 12px; width: 640px; max-width: 95vw;
+      height: 78vh; display: flex; flex-direction: column; overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,.2);
+    }
+    #ctxHeader {
+      padding: 14px 20px; border-bottom: 1px solid #eee;
+      display: flex; align-items: center; gap: 10px;
+    }
+    #ctxHeader h3 { flex: 1; font-size: 15px; color: #111; }
+    #ctxCloseBtn { background: none; border: none; font-size: 20px; cursor: pointer; color: #888; }
+    #ctxBody { flex: 1; overflow-y: auto; padding: 14px 18px; display: flex; flex-direction: column; gap: 12px; }
+    .ctx-gen {
+      border: 1px solid #e8e8f0; border-radius: 10px; padding: 12px 14px;
+    }
+    .ctx-gen-header {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+      font-size: 13px; font-weight: 600; color: #444;
+    }
+    .ctx-gen-chars { font-size: 11px; color: #999; font-weight: 400; }
+    .ctx-summary-badge {
+      font-size: 10px; background: #dcfce7; color: #166534;
+      border-radius: 4px; padding: 1px 6px;
+    }
+    .ctx-msg {
+      font-size: 12px; color: #555; padding: 4px 0; line-height: 1.5;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .ctx-msg:last-child { border-bottom: none; }
+    .ctx-msg b { color: #6366f1; }
+    .ctx-summary-text {
+      font-size: 12px; color: #166534; background: #f0fdf4;
+      border-radius: 6px; padding: 8px 10px; line-height: 1.6; white-space: pre-wrap;
+    }
+    #ctxFooter {
+      padding: 10px 16px; border-top: 1px solid #eee;
+      display: flex; align-items: center; gap: 10px; font-size: 12px; color: #888;
+    }
+    /* ── Prompt 탐색기 모달 ── */
+    #promptModal {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.45); z-index: 1000; align-items: center; justify-content: center;
+    }
+    #promptModal.open { display: flex; }
+    #promptBox {
+      background: white; border-radius: 12px; width: 700px; max-width: 95vw;
+      height: 80vh; display: flex; flex-direction: column; overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,.2);
+    }
+    #promptHeader {
+      padding: 14px 20px; border-bottom: 1px solid #eee;
+      display: flex; align-items: center; gap: 10px;
+    }
+    #promptHeader h3 { flex: 1; font-size: 15px; color: #111; }
+    #promptCloseBtn { background: none; border: none; font-size: 20px; cursor: pointer; color: #888; }
+    #promptBody { flex: 1; overflow-y: auto; padding: 14px 18px; display: flex; flex-direction: column; gap: 10px; }
+    .prompt-group-title {
+      font-size: 11px; font-weight: 700; color: #9ca3af; text-transform: uppercase;
+      letter-spacing: 0.6px; margin-top: 6px;
+    }
+    .prompt-item {
+      border: 1px solid #e8e8f0; border-radius: 8px; overflow: hidden;
+    }
+    .prompt-item-header {
+      padding: 8px 12px; background: #f5f5fc; cursor: pointer; user-select: none;
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 13px; font-weight: 600; color: #444;
+    }
+    .prompt-item-header:hover { background: #ededf8; }
+    .prompt-item-body {
+      display: none; padding: 10px 12px; background: white; border-top: 1px solid #e8e8f0;
+      font-size: 12px; line-height: 1.6; white-space: pre-wrap; color: #333; word-break: break-word;
+    }
+    .prompt-item.open .prompt-item-body { display: block; }
+    .prompt-item.open .trace-chevron { transform: rotate(90deg); }
+    /* ── MCP 서버 모달 ── */
+    #mcpModal {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.45); z-index: 1000; align-items: center; justify-content: center;
+    }
+    #mcpModal.open { display: flex; }
+    #mcpBox {
+      background: white; border-radius: 12px; width: 600px; max-width: 95vw;
+      max-height: 80vh; display: flex; flex-direction: column; overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,.2);
+    }
+    #mcpHeader {
+      padding: 14px 20px; border-bottom: 1px solid #eee;
+      display: flex; align-items: center; gap: 10px;
+    }
+    #mcpHeader h3 { flex: 1; font-size: 15px; color: #111; }
+    #mcpCloseBtn { background: none; border: none; font-size: 20px; cursor: pointer; color: #888; }
+    #mcpBody { flex: 1; overflow-y: auto; padding: 14px 18px; display: flex; flex-direction: column; gap: 10px; }
+    .mcp-server-card {
+      border: 1.5px solid #e5e7eb; border-radius: 10px; padding: 12px 14px;
+    }
+    .mcp-server-name {
+      font-size: 13px; font-weight: 700; color: #4f46e5;
+      display: flex; align-items: center; gap: 6px; margin-bottom: 4px;
+    }
+    .mcp-server-meta { font-size: 11px; color: #9ca3af; margin-bottom: 8px; }
+    .mcp-doc-list { display: flex; flex-direction: column; gap: 4px; }
+    .mcp-doc-item {
+      font-size: 12px; color: #374151; background: #f9fafb;
+      border-radius: 6px; padding: 5px 9px; display: flex; justify-content: space-between;
+    }
+    .mcp-doc-item span:last-child { color: #9ca3af; }
+    .mcp-tool-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+    .mcp-tool-item {
+      background: #f9fafb; border-radius: 6px; padding: 6px 9px;
+    }
+    .mcp-tool-name {
+      font-size: 11px; color: #6366f1; font-family: monospace; font-weight: 700;
+    }
+    .mcp-tool-params { color: #9ca3af; font-weight: 400; }
+    .mcp-tool-desc {
+      font-size: 11px; color: #6b7280; margin-top: 2px; line-height: 1.5;
+      white-space: pre-line;
+    }
     /* ── DB 탭 ── */
     #dbTabs { display:flex; gap:4px; }
     .db-tab { padding:4px 12px; border:1px solid #e5e7eb; border-radius:6px; background:white; cursor:pointer; font-size:12px; color:#666; }
@@ -678,6 +856,23 @@
       <div id="fileNames"></div>
     </div>
 
+    <!-- 컬렉션(=MCP 서버) 선택 -->
+    <div>
+      <div class="section-label">색인 대상 (MCP 서버)</div>
+      <div class="coll-selector" id="collSelector">
+        <label class="coll-option active" data-collection="lecture">
+          <input type="radio" name="collection" value="lecture" checked>
+          <div class="coll-name">📚 강의자료</div>
+          <div class="coll-desc">lecture-rag MCP</div>
+        </label>
+        <label class="coll-option" data-collection="notice">
+          <input type="radio" name="collection" value="notice">
+          <div class="coll-name">📋 공지·문서</div>
+          <div class="coll-desc">notice-rag MCP</div>
+        </label>
+      </div>
+    </div>
+
     <!-- 청킹 방식 선택 -->
     <div>
       <div class="section-label">청킹 방식</div>
@@ -709,6 +904,15 @@
       </label>
     </div>
 
+    <!-- 페이지 범위 선택 -->
+    <div style="display:flex;align-items:center;gap:8px;margin:8px 0;font-size:13px;color:#555;">
+      <span>페이지 범위</span>
+      <input type="number" id="pageStart" min="1" placeholder="시작" style="width:70px;padding:4px 6px;border:1px solid #ddd;border-radius:4px;">
+      <span>~</span>
+      <input type="number" id="pageEnd" min="1" placeholder="끝" style="width:70px;padding:4px 6px;border:1px solid #ddd;border-radius:4px;">
+      <span style="color:#999;">(비워두면 전체)</span>
+    </div>
+
     <!-- 액션 버튼 -->
     <div style="display:flex;flex-direction:column;gap:7px;">
       <button id="previewBtn" class="btn btn-primary" disabled>미리보기 →</button>
@@ -722,6 +926,10 @@
     <!-- DB 상태 -->
     <div id="chunkBadge">색인된 청크: 확인 중...</div>
     <button class="btn btn-secondary" onclick="openDbModal()">🗄️ DB 탐색기</button>
+    <button class="btn btn-secondary" onclick="openCtxModal()">🧩 Context Window</button>
+    <button class="btn btn-secondary" onclick="openPromptModal()">📋 Prompt 탐색기</button>
+    <button class="btn btn-secondary" onclick="openMcpModal()">🔌 MCP 서버</button>
+    <button class="btn btn-secondary" id="devToggle">🔧 개발자 모드</button>
   </div>
 
   <!-- DB 탐색기 모달 -->
@@ -732,8 +940,10 @@
         <div id="dbTabs">
           <button class="db-tab active" onclick="switchDbTab('browse')">📁 파일 탐색</button>
           <button class="db-tab" onclick="switchDbTab('dup')">🔍 중복 분석</button>
+          <button class="db-tab" onclick="switchDbTab('memory')">🧠 장기 메모리</button>
         </div>
         <span id="dbTotalCount" style="font-size:12px;color:#888;margin-left:auto;"></span>
+        <button class="btn" style="width:auto;padding:5px 12px;font-size:12px;background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;" onclick="deleteAllChunks()">🗑️ 전체 삭제</button>
         <button id="dbCloseBtn" onclick="closeDbModal()">✕</button>
       </div>
 
@@ -757,10 +967,60 @@
         </div>
       </div>
 
+      <!-- 장기 메모리 -->
+      <div id="dbMemoryView" style="display:none; flex:1; overflow-y:auto; padding:12px; flex-direction:column; gap:8px;">
+        <div id="dbMemoryList"><div style="color:#aaa;font-size:13px;padding:20px;">불러오는 중...</div></div>
+      </div>
+
       <div id="dbFooter">
         <span id="dbStatus"></span>
         <div style="flex:1"></div>
         <button class="btn btn-secondary" style="width:auto;padding:5px 12px;font-size:12px;" onclick="loadDbSources()">🔄 새로고침</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Context Window 모달 -->
+  <div id="ctxModal">
+    <div id="ctxBox">
+      <div id="ctxHeader">
+        <h3>🧩 Context Window</h3>
+        <span id="ctxTotalChars" style="font-size:12px;color:#888;margin-left:auto;"></span>
+        <button id="ctxCloseBtn" onclick="closeCtxModal()">✕</button>
+      </div>
+      <div id="ctxBody">
+        <div style="color:#aaa;font-size:13px;padding:20px;">불러오는 중...</div>
+      </div>
+      <div id="ctxFooter">
+        <span>현재 세션의 대화 이력이 PostgreSQL에 저장됩니다.</span>
+        <div style="flex:1"></div>
+        <button class="btn" style="width:auto;padding:5px 12px;font-size:12px;background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;" onclick="clearConversation()">🗑️ 대화 초기화</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prompt 탐색기 모달 -->
+  <div id="promptModal">
+    <div id="promptBox">
+      <div id="promptHeader">
+        <h3>📋 Prompt 탐색기</h3>
+        <button id="promptCloseBtn" onclick="closePromptModal()">✕</button>
+      </div>
+      <div id="promptBody">
+        <div style="color:#aaa;font-size:13px;padding:20px;">불러오는 중...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MCP 서버 모달 -->
+  <div id="mcpModal">
+    <div id="mcpBox">
+      <div id="mcpHeader">
+        <h3>🔌 연결된 MCP 서버</h3>
+        <button id="mcpCloseBtn" onclick="closeMcpModal()">✕</button>
+      </div>
+      <div id="mcpBody">
+        <div style="color:#aaa;font-size:13px;padding:20px;">불러오는 중...</div>
       </div>
     </div>
   </div>
@@ -782,7 +1042,6 @@
             🤖 Agentic RAG
           </button>
         </div>
-        <button id="devToggle">개발자 모드</button>
       </div>
     </div>
     <div id="messages">
@@ -816,9 +1075,18 @@
     <div id="chunkDetail">
       <div id="detailHeader">
         <span id="detailSource">← 청크를 클릭하면 내용이 여기 표시됩니다</span>
-        <span id="detailMeta"></span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span id="detailMeta"></span>
+          <span id="detailChildTag" class="detail-tag child" style="display:none;">Child (검색용)</span>
+          <button id="parentToggleBtn" style="display:none;">📄 Parent 보기</button>
+        </div>
+      </div>
+      <div id="overlapNotice" style="display:none;">
+        <div class="overlap-label">↩️ 이전 청크와 겹치는 부분 (overlap, <span id="overlapLen"></span>자) — 검색엔 포함되지만 새 내용은 그 다음부터입니다</div>
+        <div id="overlapPreview"></div>
       </div>
       <textarea id="detailTextarea" placeholder="청크를 선택하세요"></textarea>
+      <div id="parentView"></div>
     </div>
 
     <div id="devFooter">
@@ -835,6 +1103,16 @@
     const fileNames    = document.getElementById('fileNames');
     const visionMode   = document.getElementById('visionMode');
     const cancelBtn    = document.getElementById('cancelBtn');
+
+    // ── 컬렉션(=MCP 서버) 선택 ──
+    let currentCollection = 'lecture';
+    document.querySelectorAll('input[name="collection"]').forEach(radio => {
+      radio.addEventListener('change', () => {
+        currentCollection = radio.value;
+        document.querySelectorAll('.coll-option').forEach(opt => opt.classList.remove('active'));
+        radio.closest('.coll-option').classList.add('active');
+      });
+    });
 
     // ── Loader 선택 (fitz / Docling) ──
     let currentLoader = 'fitz';
@@ -873,9 +1151,16 @@
     const detailSource  = document.getElementById('detailSource');
     const detailMeta    = document.getElementById('detailMeta');
     const detailTextarea= document.getElementById('detailTextarea');
+    const detailChildTag = document.getElementById('detailChildTag');
+    const parentToggleBtn = document.getElementById('parentToggleBtn');
+    const overlapNotice  = document.getElementById('overlapNotice');
+    const overlapLen     = document.getElementById('overlapLen');
+    const overlapPreview = document.getElementById('overlapPreview');
+    const parentView     = document.getElementById('parentView');
 
     let currentChunks = [];
     let selectedIdx   = null;
+    let showingParent = false;
 
     function renderMd(md) {
       const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -985,6 +1270,9 @@
         detailSource.textContent = '← 청크를 클릭하면 내용이 여기 표시됩니다';
         detailMeta.textContent = '';
         detailTextarea.value = '';
+        detailChildTag.style.display = 'none';
+        parentToggleBtn.style.display = 'none';
+        overlapNotice.style.display = 'none';
         return;
       }
 
@@ -995,11 +1283,15 @@
       chunkList.innerHTML = '';
       currentChunks.forEach((chunk, i) => {
         const chars = chunk.content.length;
+        const overlapTag = chunk.overlap > 0
+          ? `<span class="chunk-meta" style="color:#f9e2af;" title="이전 청크와 ${chunk.overlap}자 중복">↩${chunk.overlap}</span>`
+          : '';
         const row = document.createElement('div');
         row.className = 'chunk-row' + (i === selectedIdx ? ' selected' : '');
         row.innerHTML = `
           <span class="chunk-num">${i + 1}</span>
           <span class="chunk-source">${chunk.source}</span>
+          ${overlapTag}
           <span class="chunk-meta">${chars}자</span>
           <button class="chunk-del" data-i="${i}">✕</button>
         `;
@@ -1015,6 +1307,7 @@
     function selectChunk(i) {
       syncDetail();
       selectedIdx = i;
+      showingParent = false;
 
       // 목록 하이라이트 갱신
       document.querySelectorAll('.chunk-row').forEach((r, idx) => {
@@ -1025,8 +1318,50 @@
       detailSource.textContent = chunk.source;
       detailMeta.textContent = `${chunk.content.length}자`;
       detailTextarea.value = formatForDisplay(chunk.content);
+
+      // child/parent 정보 표시
+      detailChildTag.style.display = 'inline-block';
+      const hasParent = chunk.parent_content && chunk.parent_content !== chunk.content;
+      parentToggleBtn.style.display = hasParent ? 'inline-block' : 'none';
+      parentToggleBtn.textContent = '📄 Parent 보기';
+
+      // overlap(이전 청크와 겹치는 부분) 미리보기
+      const overlap = chunk.overlap || 0;
+      if (overlap > 0) {
+        overlapNotice.style.display = 'block';
+        overlapLen.textContent = overlap;
+        overlapPreview.textContent = chunk.content.slice(0, overlap);
+      } else {
+        overlapNotice.style.display = 'none';
+      }
+
+      detailTextarea.style.display = 'block';
+      parentView.style.display = 'none';
       detailTextarea.focus();
     }
+
+    // ── Parent / Child 보기 전환 ──
+    parentToggleBtn.addEventListener('click', () => {
+      if (selectedIdx === null) return;
+      syncDetail();
+      const chunk = currentChunks[selectedIdx];
+      showingParent = !showingParent;
+
+      if (showingParent) {
+        parentView.textContent = chunk.parent_content;
+        parentView.style.display = 'block';
+        detailTextarea.style.display = 'none';
+        overlapNotice.style.display = 'none';
+        detailMeta.textContent = `${chunk.parent_content.length}자 (답변 생성에 사용되는 전체 컨텍스트, 읽기 전용)`;
+        parentToggleBtn.textContent = '✏️ Child 보기';
+      } else {
+        detailTextarea.style.display = 'block';
+        parentView.style.display = 'none';
+        detailMeta.textContent = `${chunk.content.length}자`;
+        if (chunk.overlap > 0) overlapNotice.style.display = 'block';
+        parentToggleBtn.textContent = '📄 Parent 보기';
+      }
+    });
 
     // 현재 편집 내용 → currentChunks에 저장
     function syncDetail() {
@@ -1056,12 +1391,16 @@
         : mode === 'table'
         ? '<span style="font-size:10px;background:#fff7ed;color:#ea580c;border:1px solid #fed7aa;border-radius:4px;padding:1px 5px;flex-shrink:0;">Table</span>'
         : '<span style="font-size:10px;background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:4px;padding:1px 5px;flex-shrink:0;">Text</span>';
+      const overlapTag = chunk.overlap > 0
+        ? `<span class="chunk-meta" style="color:#f9e2af;" title="이전 청크와 ${chunk.overlap}자 중복">↩${chunk.overlap}</span>`
+        : '';
       const row = document.createElement('div');
       row.className = 'chunk-row' + (i === selectedIdx ? ' selected' : '');
       row.innerHTML = `
         <span class="chunk-num">${i + 1}</span>
         ${badge}
         <span class="chunk-source">${chunk.source}</span>
+        ${overlapTag}
         <span class="chunk-meta">${chars}자</span>
         <button class="chunk-del" data-i="${i}">✕</button>
       `;
@@ -1098,6 +1437,10 @@
         form.append('file', file);
         form.append('vision', isVision);
         form.append('loader', currentLoader);
+        const pageStartVal = document.getElementById('pageStart').value;
+        const pageEndVal   = document.getElementById('pageEnd').value;
+        if (pageStartVal) form.append('page_start', pageStartVal);
+        if (pageEndVal)   form.append('page_end', pageEndVal);
 
         try {
           const res = await fetch('/preview-stream', { method: 'POST', body: form });
@@ -1150,6 +1493,7 @@
       for (const file of files) {
         const form = new FormData();
         form.append('file', file);
+        form.append('collection', currentCollection);
         try {
           const res  = await fetch('/upload', { method: 'POST', body: form });
           const data = await res.json();
@@ -1176,7 +1520,8 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             chunks: currentChunks,
-            force:  forceReindex.checked
+            force:  forceReindex.checked,
+            collection: currentCollection
           })
         });
         const data = await res.json();
@@ -1208,6 +1553,12 @@
       messages.appendChild(div);
       messages.scrollTop = messages.scrollHeight;
       return div;
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str ?? '';
+      return div.innerHTML;
     }
 
     function makePanel(icon, title, contentHtml) {
@@ -1293,6 +1644,12 @@
           </div>`;
       }).join('');
       panels.appendChild(makePanel('📊', `Re-ranking (${usedCount}개 사용)`, rerankHtml || '<span style="color:#aaa;">결과 없음</span>'));
+
+      // ── 패널 4: 최종 컨텍스트 (LLM에게 전달된 전체 자료) ──────
+      if (debug.eval_context) {
+        const ctxHtml = `<pre style="font-size:11px;color:#444;background:#f8f8fc;border-radius:6px;padding:8px;white-space:pre-wrap;word-break:break-word;max-height:400px;overflow-y:auto;">${escapeHtml(debug.eval_context)}</pre>`;
+        panels.appendChild(makePanel('📄', 'LLM에게 전달된 자료 전체', ctxHtml));
+      }
 
       div.appendChild(panels);
 
@@ -1389,8 +1746,12 @@
       document.getElementById('modeAgent').style.color      = mode === 'agent' ? 'white'   : '#666';
     }
 
-    // 대화 히스토리 — Claude에게 넘길 이전 대화 쌍
-    const chatHistory = [];
+    // 세션 식별자 — 대화 이력은 서버 DB에 저장되고 session_id로 조회
+    let sessionId = localStorage.getItem('rag_session_id');
+    if (!sessionId) {
+      sessionId = crypto.randomUUID();
+      localStorage.setItem('rag_session_id', sessionId);
+    }
 
     async function send() {
       const query = queryInput.value.trim();
@@ -1406,7 +1767,7 @@
         const res  = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query, history: chatHistory })
+          body: JSON.stringify({ query, session_id: sessionId })
         });
         const data = await res.json();
         ph.innerHTML = renderMd(data.answer);
@@ -1414,10 +1775,6 @@
 
         if (data.debug?.mode === 'agent') buildAgentTrace(ph, data);
         else buildTrace(ph, data);
-
-        // 이번 대화를 히스토리에 추가
-        chatHistory.push({ role: 'user',      content: query });
-        chatHistory.push({ role: 'assistant',  content: data.answer });
       } catch {
         ph.textContent = '오류가 발생했습니다.';
       }
@@ -1440,29 +1797,268 @@
       const calls   = debug.tool_calls;
       const turns   = debug.turns ?? calls.length;
 
-      if (!calls.length) return;
+      const panels = document.createElement('div');
+      panels.className = 'trace-panels';
 
+      // ── 패널: LLM에게 전달된 tool 목록 ──────────────────────
+      if (debug.tools?.length) {
+        const toolsHtml = debug.tools.map(t => `
+          <div style="margin-bottom:8px;padding:8px;background:#f8f8fc;border-radius:6px;border-left:3px solid #6366f1;">
+            <div style="font-weight:600;color:#6366f1;font-family:monospace;">${t.name}(${Object.keys(t.input_schema?.properties || {}).join(', ')})</div>
+            <div style="font-size:12px;color:#555;margin-top:4px;white-space:pre-wrap;">${t.description}</div>
+          </div>`).join('');
+        panels.appendChild(makePanel('🧰', `LLM에게 전달된 tool 목록 (${debug.tools.length}개)`, toolsHtml));
+      }
+
+      if (!calls.length) {
+        if (panels.children.length) div.appendChild(panels);
+        return;
+      }
+
+      const originalQuery = debug.query;
       let bodyHtml = `<div style="font-size:12px;color:#888;margin-bottom:8px;">총 ${turns}번 검색</div>`;
       calls.forEach((c, i) => {
+        const isRetry   = i > 0;
+        const rewritten = originalQuery && c.query !== originalQuery;
+        const tagHtml = isRetry
+          ? `<span style="font-size:10px;background:#fef3c7;color:#b45309;border-radius:4px;padding:1px 6px;margin-left:6px;">🔁 재검색</span>`
+          : rewritten
+          ? `<span style="font-size:10px;background:#e0e7ff;color:#4338ca;border-radius:4px;padding:1px 6px;margin-left:6px;">🔄 쿼리 재작성</span>`
+          : `<span style="font-size:10px;background:#f1f5f9;color:#64748b;border-radius:4px;padding:1px 6px;margin-left:6px;">원본 질문</span>`;
         bodyHtml += `
           <div style="margin-bottom:8px;padding:8px;background:#f8f8fc;border-radius:6px;border-left:3px solid #6366f1;">
-            <div style="font-size:11px;color:#888;margin-bottom:3px;">${i + 1}번째 검색</div>
+            <div style="font-size:11px;color:#888;margin-bottom:3px;">${i + 1}번째 검색${tagHtml}</div>
+            ${c.thought ? `<div style="font-size:12px;color:#555;background:#eef2ff;border-radius:4px;padding:5px 7px;margin-bottom:5px;white-space:pre-wrap;">🧠 ${c.thought}</div>` : ''}
+            ${c.prev_issue ? `<div style="font-size:12px;color:#991b1b;background:#fef2f2;border-radius:4px;padding:5px 7px;margin-bottom:5px;white-space:pre-wrap;">❌ 이전 결과 문제: ${c.prev_issue}</div>` : ''}
             <div style="font-weight:600;color:#6366f1;margin-bottom:4px;">"${c.query}"</div>
+            ${c.reason ? `<div style="font-size:12px;color:#92400e;background:#fffbeb;border-radius:4px;padding:5px 7px;margin-bottom:5px;white-space:pre-wrap;">💡 ${c.reason}</div>` : ''}
             <div style="font-size:11px;color:#999;">${c.preview}...</div>
             ${c.sources?.length ? `<div style="font-size:11px;color:#4ade80;margin-top:3px;">✅ ${c.sources.join(', ')}</div>` : '<div style="font-size:11px;color:#f87171;margin-top:3px;">❌ 유사도 낮음</div>'}
+            ${c.content ? `
+              <details style="margin-top:6px;">
+                <summary style="font-size:11px;color:#6366f1;cursor:pointer;">📄 LLM에게 전달된 검색 결과 전체 보기</summary>
+                <pre style="font-size:11px;color:#444;background:white;border-radius:4px;padding:6px 8px;margin-top:4px;white-space:pre-wrap;word-break:break-word;max-height:300px;overflow-y:auto;">${escapeHtml(c.content)}</pre>
+              </details>` : ''}
           </div>`;
       });
 
-      const panel = document.createElement('div');
-      panel.className = 'trace-panels';
-      panel.appendChild(makePanel('🤖', `Agent 검색 흐름 (${turns}회)`, bodyHtml));
-      div.appendChild(panel);
+      panels.appendChild(makePanel('🤖', `Agent 검색 흐름 (${turns}회)`, bodyHtml));
+      div.appendChild(panels);
     }
 
     sendBtn.addEventListener('click', send);
     queryInput.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
 
     refreshCount();
+    restoreConversation();
+
+    // ── Context Window ────────────────────────────────────────
+    async function restoreConversation() {
+      try {
+        const res = await fetch(`/conversation/${sessionId}`);
+        const rows = await res.json();
+        for (const row of rows) {
+          if (row.is_summary) {
+            if (row.role === 'assistant') addMsg('assistant', '📝 이전 대화 요약: ' + row.content);
+          } else {
+            addMsg(row.role, row.content);
+          }
+        }
+      } catch {}
+    }
+
+    async function openCtxModal() {
+      document.getElementById('ctxModal').classList.add('open');
+      await loadConversationPanel();
+    }
+
+    function closeCtxModal() {
+      document.getElementById('ctxModal').classList.remove('open');
+    }
+
+    document.getElementById('ctxModal').addEventListener('click', e => {
+      if (e.target === document.getElementById('ctxModal')) closeCtxModal();
+    });
+
+    async function loadConversationPanel() {
+      const body = document.getElementById('ctxBody');
+      body.innerHTML = '<div style="color:#aaa;font-size:13px;padding:20px;">불러오는 중...</div>';
+
+      const res  = await fetch(`/conversation/${sessionId}`);
+      const rows = await res.json();
+
+      if (!rows.length) {
+        body.innerHTML = '<div style="color:#aaa;font-size:13px;padding:20px;">아직 대화 이력이 없습니다.</div>';
+        document.getElementById('ctxTotalChars').textContent = '';
+        return;
+      }
+
+      // generation별로 그룹화
+      const gens = new Map();
+      for (const row of rows) {
+        if (!gens.has(row.generation)) gens.set(row.generation, []);
+        gens.get(row.generation).push(row);
+      }
+
+      let totalChars = 0;
+      body.innerHTML = '';
+      for (const [gen, msgs] of [...gens.entries()].sort((a, b) => a[0] - b[0])) {
+        const chars = msgs.reduce((sum, m) => sum + m.content.length, 0);
+        totalChars += chars;
+        const isSummary = msgs.some(m => m.is_summary);
+
+        const card = document.createElement('div');
+        card.className = 'ctx-gen';
+
+        let inner = `<div class="ctx-gen-header">세대 ${gen + 1}
+          <span class="ctx-gen-chars">${chars.toLocaleString()}자</span>
+          ${isSummary ? '<span class="ctx-summary-badge">📝 요약됨</span>' : ''}
+        </div>`;
+
+        if (isSummary) {
+          const summary = msgs.find(m => m.role === 'assistant');
+          inner += `<div class="ctx-summary-text">${(summary?.content || '').replace(/</g,'&lt;')}</div>`;
+        } else {
+          for (const m of msgs) {
+            const preview = m.content.length > 80 ? m.content.slice(0, 80) + '…' : m.content;
+            inner += `<div class="ctx-msg"><b>${m.role === 'user' ? '🙋 사용자' : '🤖 assistant'}</b>: ${preview.replace(/</g,'&lt;')}</div>`;
+          }
+          inner += `<button class="btn btn-secondary" style="width:auto;padding:4px 10px;font-size:12px;margin-top:8px;" onclick="summarizeGeneration(${gen})">📝 이 구간 요약하기</button>`;
+        }
+
+        card.innerHTML = inner;
+        body.appendChild(card);
+      }
+
+      document.getElementById('ctxTotalChars').textContent = `총 ${totalChars.toLocaleString()}자`;
+    }
+
+    async function summarizeGeneration(generation) {
+      const res = await fetch('/conversation/summarize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: sessionId, generation })
+      });
+      await res.json();
+      await loadConversationPanel();
+    }
+
+    async function clearConversation() {
+      if (!confirm('대화 이력을 모두 삭제하시겠습니까?')) return;
+      await fetch(`/conversation/${sessionId}`, { method: 'DELETE' });
+      messages.innerHTML = '<div class="msg assistant">안녕하세요! 왼쪽에서 PDF를 선택한 후 <b>미리보기</b>로 청크를 확인하거나 <b>바로 색인</b>으로 저장하세요.</div>';
+      await loadConversationPanel();
+    }
+
+    // ── Prompt 탐색기 ──────────────────────────────────────────
+    const PROMPT_GROUP_LABEL = {
+      modular_rag:  '🔧 Modular RAG',
+      agentic_rag:  '🤖 Agentic RAG',
+      conversation: '🧩 대화 요약 / 장기 기억',
+      doc_context:  '📄 자동 생성 시스템 프롬프트',
+    };
+    const PROMPT_ITEM_LABEL = {
+      intent: 'Intent (의도 파악)',
+      query_rewrite: 'Query Rewrite (쿼리 재작성)',
+      rerank: 'Re-ranking',
+      answer: 'Answer (최종 답변)',
+      agent_system: 'Agent System Prompt',
+      summary: '세대 요약',
+      fact_extraction: '장기 기억 추출',
+      current: '현재 적용된 프롬프트',
+    };
+
+    async function openPromptModal() {
+      document.getElementById('promptModal').classList.add('open');
+      const body = document.getElementById('promptBody');
+      body.innerHTML = '<div style="color:#aaa;font-size:13px;padding:20px;">불러오는 중...</div>';
+
+      const res = await fetch('/prompts');
+      const groups = await res.json();
+
+      body.innerHTML = '';
+      for (const [groupKey, items] of Object.entries(groups)) {
+        const title = document.createElement('div');
+        title.className = 'prompt-group-title';
+        title.textContent = PROMPT_GROUP_LABEL[groupKey] || groupKey;
+        body.appendChild(title);
+
+        for (const [itemKey, text] of Object.entries(items)) {
+          const item = document.createElement('div');
+          item.className = 'prompt-item';
+          item.innerHTML = `
+            <div class="prompt-item-header">
+              <span>${PROMPT_ITEM_LABEL[itemKey] || itemKey}</span>
+              <span class="trace-chevron">▶</span>
+            </div>
+            <div class="prompt-item-body">${text.replace(/</g,'&lt;')}</div>
+          `;
+          item.querySelector('.prompt-item-header').addEventListener('click', () => {
+            item.classList.toggle('open');
+          });
+          body.appendChild(item);
+        }
+      }
+    }
+
+    function closePromptModal() {
+      document.getElementById('promptModal').classList.remove('open');
+    }
+
+    document.getElementById('promptModal').addEventListener('click', e => {
+      if (e.target === document.getElementById('promptModal')) closePromptModal();
+    });
+
+    // ── MCP 서버 모달 ──
+    const MCP_SERVER_INFO = {
+      lecture: { name: 'lecture-rag', module: 'mcp_servers.lecture_mcp.server' },
+      notice:  { name: 'notice-rag',  module: 'mcp_servers.notice_mcp.server' },
+    };
+    async function openMcpModal() {
+      document.getElementById('mcpModal').classList.add('open');
+      const body = document.getElementById('mcpBody');
+      body.innerHTML = '<div style="color:#aaa;font-size:13px;padding:20px;">불러오는 중...</div>';
+
+      const res  = await fetch('/collections');
+      const data = await res.json();
+      const byId = Object.fromEntries(data.collections.map(c => [c.collection, c]));
+
+      body.innerHTML = '';
+      for (const { id, label, tools } of data.available) {
+        const info = MCP_SERVER_INFO[id] || {};
+        const coll = byId[id];
+        const docs = coll ? coll.documents : [];
+
+        const card = document.createElement('div');
+        card.className = 'mcp-server-card';
+        card.innerHTML = `
+          <div class="mcp-server-name">🔌 ${info.name || id} <span style="color:#9ca3af;font-weight:400;">(${label})</span></div>
+          <div class="mcp-server-meta">python -m ${info.module || ''} · 문서 ${docs.length}개 · 청크 ${coll ? coll.chunk_count : 0}개</div>
+          <div class="mcp-doc-list">
+            ${docs.length
+              ? docs.map(d => `<div class="mcp-doc-item"><span>📄 ${d.name}</span><span>${d.count}개 청크</span></div>`).join('')
+              : '<div style="color:#aaa;font-size:12px;">색인된 문서 없음</div>'}
+          </div>
+          <div class="mcp-tool-list">
+            ${(tools || []).map(t => `
+              <div class="mcp-tool-item">
+                <div class="mcp-tool-name">${t.name}<span class="mcp-tool-params">(${t.params.join(', ')})</span></div>
+                <div class="mcp-tool-desc">${t.description}</div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+        body.appendChild(card);
+      }
+    }
+
+    function closeMcpModal() {
+      document.getElementById('mcpModal').classList.remove('open');
+    }
+
+    document.getElementById('mcpModal').addEventListener('click', e => {
+      if (e.target === document.getElementById('mcpModal')) closeMcpModal();
+    });
 
     // ── DB 탐색기 ──────────────────────────────────────────────
     let dbCurrentSource = null;
@@ -1479,6 +2075,15 @@
     document.getElementById('dbModal').addEventListener('click', e => {
       if (e.target === document.getElementById('dbModal')) closeDbModal();
     });
+
+    async function deleteAllChunks() {
+      if (!confirm('정말로 모든 청크를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
+      await fetch('/db/all', { method: 'DELETE' });
+      dbCurrentSource = null;
+      document.getElementById('dbChunks').innerHTML = '<div style="color:#aaa;font-size:13px;padding:20px;">← 왼쪽에서 파일을 선택하세요</div>';
+      await loadDbSources();
+      if (typeof refreshCount === 'function') refreshCount();
+    }
 
     async function loadDbSources() {
       const sourcesEl = document.getElementById('dbSources');
@@ -1543,11 +2148,47 @@
 
     // ── DB 탭 전환 ──────────────────────────────────────────────
     function switchDbTab(tab) {
-      document.getElementById('dbBody').style.display    = tab === 'browse' ? 'flex' : 'none';
-      document.getElementById('dbDupView').style.display = tab === 'dup'    ? 'flex' : 'none';
+      document.getElementById('dbBody').style.display       = tab === 'browse' ? 'flex' : 'none';
+      document.getElementById('dbDupView').style.display    = tab === 'dup'    ? 'flex' : 'none';
+      document.getElementById('dbMemoryView').style.display = tab === 'memory' ? 'flex' : 'none';
       document.querySelectorAll('.db-tab').forEach((b, i) => {
-        b.classList.toggle('active', (i === 0 && tab === 'browse') || (i === 1 && tab === 'dup'));
+        b.classList.toggle('active',
+          (i === 0 && tab === 'browse') || (i === 1 && tab === 'dup') || (i === 2 && tab === 'memory'));
       });
+      if (tab === 'memory') loadMemory();
+    }
+
+    // ── 장기 메모리 ────────────────────────────────────────────
+    async function loadMemory() {
+      const listEl = document.getElementById('dbMemoryList');
+      listEl.innerHTML = '<div style="color:#aaa;font-size:13px;padding:20px;">불러오는 중...</div>';
+
+      const res   = await fetch(`/memory/${sessionId}`);
+      const facts = await res.json();
+
+      if (!facts.length) {
+        listEl.innerHTML = '<div style="color:#aaa;font-size:13px;text-align:center;padding:40px;">저장된 장기 기억이 없습니다.<br>(Context Window에서 세대를 요약하면 추출됩니다)</div>';
+        return;
+      }
+
+      listEl.innerHTML = '';
+      for (const f of facts) {
+        const row = document.createElement('div');
+        row.className = 'db-chunk';
+        row.innerHTML = `
+          <div class="db-chunk-src">세대 ${f.generation + 1}에서 추출 · ${new Date(f.created_at).toLocaleString()}</div>
+          <div class="db-chunk-text">${f.fact.replace(/</g,'&lt;')}</div>
+          <button class="db-chunk-del" title="삭제">✕</button>
+        `;
+        row.querySelector('.db-chunk-del').addEventListener('click', () => deleteFact(f.id, row));
+        listEl.appendChild(row);
+      }
+    }
+
+    async function deleteFact(id, row) {
+      if (!confirm('이 기억을 삭제하시겠습니까?')) return;
+      await fetch(`/memory/fact/${id}`, { method: 'DELETE' });
+      row.remove();
     }
 
     // ── 중복 분석 ────────────────────────────────────────────────

@@ -9,6 +9,7 @@ pymupdf
 fastapi
 uvicorn
 python-multipart
+mcp
 # 오픈소스 문서 처리 라이브러리 (pdf_loader_docling.py에서 사용)
 # 설치 시 시간이 오래 걸릴 수 있음 (ML 모델 다운로드)
 docling

@@ -76,7 +76,7 @@ def _rewrite_query(query: str) -> dict:
 def _rerank(query: str, chunks: list) -> list:
     docs = [
         {"index": i, "source": src, "content": content[:300]}
-        for i, (content, _, src) in enumerate(chunks)
+        for i, (content, _, src, _) in enumerate(chunks)
     ]
     try:
         resp = client.messages.create(
@@ -97,18 +97,29 @@ def _rerank(query: str, chunks: list) -> list:
                 for i in range(len(chunks))]
 
 
+# ── 장기 기억(facts)을 시스템 프롬프트에 주입 ──────────────────
+def _with_facts(system: str, facts: list[str] | None) -> str:
+    if not facts:
+        return system
+    facts_block = "\n".join(f"- {f}" for f in facts)
+    return f"{system}\n\n[사용자에 대해 기억하고 있는 것]\n{facts_block}"
+
+
 # ── 메인 파이프라인 ───────────────────────────────────────────
-def answer(query: str, history: list[dict] | None = None) -> dict:
+def answer(query: str, history: list[dict] | None = None, facts: list[str] | None = None) -> dict:
 
     # STEP 1: 의도 파악
     intent = _check_intent(query)
     if not intent.get("is_lecture", True):
         # 문서 무관 질문 → RAG 없이 직접 답변
-        resp = client.messages.create(
-            model=CLAUDE_MODEL,
-            max_tokens=512,
-            messages=(history or []) + [{"role": "user", "content": query}]
-        )
+        kwargs = {
+            "model": CLAUDE_MODEL,
+            "max_tokens": 512,
+            "messages": (history or []) + [{"role": "user", "content": query}],
+        }
+        if facts:
+            kwargs["system"] = _with_facts("", facts)
+        resp = client.messages.create(**kwargs)
         return {
             "answer": resp.content[0].text,
             "sources": [],
@@ -133,7 +144,7 @@ def answer(query: str, history: list[dict] | None = None) -> dict:
                 "similarity": round(sim, 3),
                 "preview": content[:120].replace('\n', ' '),
             }
-            for i, (content, sim, src) in enumerate(chunks)
+            for i, (content, sim, src, _) in enumerate(chunks)
         ],
     }
 
@@ -175,15 +186,23 @@ def answer(query: str, history: list[dict] | None = None) -> dict:
         }
 
     # STEP 5: 답변 생성
-    context = "\n\n---\n\n".join(
-        f"[출처: {src}]\n{content}" for content, _, src in relevant_chunks
-    )
-    sources = [src for _, _, src in relevant_chunks]
+    # parent_content(페이지 전체 등) 기준으로 중복 제거
+    # - 같은 페이지에서 여러 child 청크가 검색돼도 컨텍스트엔 한 번만 포함
+    seen_sources = set()
+    context_parts = []
+    for _, _, src, parent_content in relevant_chunks:
+        if src in seen_sources:
+            continue
+        seen_sources.add(src)
+        context_parts.append(f"[출처: {src}]\n{parent_content}")
+
+    context = "\n\n---\n\n".join(context_parts)
+    sources = [src for _, _, src, _ in relevant_chunks]
 
     resp = client.messages.create(
         model=CLAUDE_MODEL,
         max_tokens=1024,
-        system=doc_context.get_prompt(RAG_SYSTEM_PROMPT),
+        system=_with_facts(doc_context.get_prompt(RAG_SYSTEM_PROMPT), facts),
         messages=(history or []) + [{
             "role": "user",
             "content": f"[참고 자료]\n{context}\n\n[질문] {query}"
